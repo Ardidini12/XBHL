@@ -58,7 +58,7 @@ export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       {
-        title: "Sign Up - FastAPI Template",
+        title: "Sign Up - XBHL",
       },
     ],
   }),
@@ -67,6 +67,7 @@ export const Route = createFileRoute("/signup")({
 function SignUp() {
   const { signUpMutation } = useAuth()
   const { status: gamertagStatus, checkAvailability: checkGamertagAvailability } = useAvailabilityCheck()
+  const { status: emailStatus, checkAvailability: checkEmailAvailability } = useAvailabilityCheck()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -82,13 +83,18 @@ function SignUp() {
   })
 
   const gamertagValue = form.watch("gamertag")
+  const emailValue = form.watch("email")
   const debouncedGamertag = useDebounce(gamertagValue, 500)
+  const debouncedEmail = useDebounce(emailValue, 500)
 
   useEffect(() => {
     if (debouncedGamertag && debouncedGamertag.length >= 2) {
       checkGamertagAvailability('gamertag', debouncedGamertag)
     }
-  }, [debouncedGamertag, checkGamertagAvailability])
+    if (debouncedEmail && debouncedEmail.length >= 2) {
+      checkEmailAvailability('email', debouncedEmail)
+    }
+  }, [debouncedGamertag, checkGamertagAvailability, debouncedEmail, checkEmailAvailability])
 
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
@@ -136,14 +142,31 @@ function SignUp() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
+                    <div className="relative">
                     <Input
                       data-testid="email-input"
                       placeholder="user@example.com"
                       type="email"
                       {...field}
                     />
+                    {emailStatus === 'loading' && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        Checking...
+                      </span>
+                    )}
+                    {emailStatus === 'available' && field.value.length >= 2 && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                        ✓ Available
+                      </span>
+                    )}
+                    {emailStatus === 'unavailable' && field.value.length >= 2 && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                        ✗ Taken
+                      </span>
+                    )}
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage /> 
                 </FormItem>
               )}
             />
