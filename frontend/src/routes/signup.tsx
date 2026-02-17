@@ -19,11 +19,18 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck"
+import { useDebounce } from "@/hooks/useDebounce"
+import { useEffect } from "react"
 
 const formSchema = z
   .object({
     email: z.email(),
     full_name: z.string().min(1, { message: "Full Name is required" }),
+    gamertag: z
+      .string()
+      .min(2, { message: "Gamertag must be at least 2 characters" })
+      .max(20, { message: "Gamertag must be at most 20 characters" }),
     password: z
       .string()
       .min(1, { message: "Password is required" })
@@ -59,6 +66,8 @@ export const Route = createFileRoute("/signup")({
 
 function SignUp() {
   const { signUpMutation } = useAuth()
+  const { status: gamertagStatus, checkAvailability: checkGamertagAvailability } = useAvailabilityCheck()
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -66,10 +75,20 @@ function SignUp() {
     defaultValues: {
       email: "",
       full_name: "",
+      gamertag: "",
       password: "",
       confirm_password: "",
     },
   })
+
+  const gamertagValue = form.watch("gamertag")
+  const debouncedGamertag = useDebounce(gamertagValue, 500)
+
+  useEffect(() => {
+    if (debouncedGamertag && debouncedGamertag.length >= 2) {
+      checkGamertagAvailability('gamertag', debouncedGamertag)
+    }
+  }, [debouncedGamertag, checkGamertagAvailability])
 
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
@@ -123,6 +142,42 @@ function SignUp() {
                       type="email"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="gamertag"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gamertag</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        data-testid="gamertag-input"
+                        placeholder="your_gamertag"
+                        type="text"
+                        {...field}
+                      />
+                      {gamertagStatus === 'loading' && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          Checking...
+                        </span>
+                      )}
+                      {gamertagStatus === 'available' && field.value.length >= 2 && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                          ✓ Available
+                        </span>
+                      )}
+                      {gamertagStatus === 'unavailable' && field.value.length >= 2 && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                          ✗ Taken
+                        </span>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -44,6 +44,7 @@ export type UserCreate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    gamertag: string;
     password: string;
 };
 
@@ -52,6 +53,7 @@ export type UserPublic = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    gamertag: string;
     id: string;
     created_at?: (string | null);
 };
@@ -60,6 +62,7 @@ export type UserRegister = {
     email: string;
     password: string;
     full_name?: (string | null);
+    gamertag: string;
 };
 
 export type UsersPublic = {
@@ -72,12 +75,14 @@ export type UserUpdate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    gamertag?: (string | null);
     password?: (string | null);
 };
 
 export type UserUpdateMe = {
     full_name?: (string | null);
     email?: (string | null);
+    gamertag?: (string | null);
 };
 
 export type ValidationError = {
@@ -89,8 +94,6 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
-
-
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
@@ -123,6 +126,15 @@ export type PrivateCreateUserData = {
 };
 
 export type PrivateCreateUserResponse = (UserPublic);
+
+export type UsersCheckAvailabilityData = {
+    email?: (string | null);
+    gamertag?: (string | null);
+};
+
+export type UsersCheckAvailabilityResponse = ({
+    [key: string]: (boolean);
+});
 
 export type UsersReadUsersData = {
     limit?: number;

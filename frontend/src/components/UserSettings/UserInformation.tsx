@@ -20,10 +20,17 @@ import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
+import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck"
+import { useDebounce } from "@/hooks/useDebounce"
+import { useEffect } from "react"
 
 const formSchema = z.object({
   full_name: z.string().max(30).optional(),
   email: z.email({ message: "Invalid email address" }),
+  gamertag: z
+    .string()
+    .min(2, { message: "Gamertag must be at least 2 characters" })
+    .max(20, { message: "Gamertag must be at most 20 characters" }),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -33,6 +40,7 @@ const UserInformation = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [editMode, setEditMode] = useState(false)
   const { user: currentUser } = useAuth()
+  const { status: gamertagStatus, checkAvailability: checkGamertagAvailability } = useAvailabilityCheck()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -41,8 +49,19 @@ const UserInformation = () => {
     defaultValues: {
       full_name: currentUser?.full_name ?? undefined,
       email: currentUser?.email,
+      gamertag: currentUser?.gamertag ?? "",
     },
   })
+
+  const gamertagValue = form.watch("gamertag")
+  const debouncedGamertag = useDebounce(gamertagValue, 500)
+
+  useEffect(() => {
+    // Only check if gamertag has changed and is different from current user's gamertag
+    if (debouncedGamertag && debouncedGamertag.length >= 2 && debouncedGamertag !== currentUser?.gamertag) {
+      checkGamertagAvailability('gamertag', debouncedGamertag)
+    }
+  }, [debouncedGamertag, currentUser?.gamertag, checkGamertagAvailability])
 
   const toggleEditMode = () => {
     setEditMode(!editMode)
@@ -70,6 +89,9 @@ const UserInformation = () => {
     }
     if (data.email !== currentUser?.email) {
       updateData.email = data.email
+    }
+    if (data.gamertag !== currentUser?.gamertag) {
+      updateData.gamertag = data.gamertag
     }
 
     mutation.mutate(updateData)
@@ -132,6 +154,44 @@ const UserInformation = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <p className="py-2 truncate max-w-sm">{field.value}</p>
+                </FormItem>
+              )
+            }
+          />
+
+          <FormField
+            control={form.control}
+            name="gamertag"
+            render={({ field }) =>
+              editMode ? (
+                <FormItem>
+                  <FormLabel>Gamertag</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input type="text" {...field} />
+                      {gamertagStatus === 'loading' && field.value !== currentUser?.gamertag && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          Checking...
+                        </span>
+                      )}
+                      {gamertagStatus === 'available' && field.value.length >= 2 && field.value !== currentUser?.gamertag && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                          ✓ Available
+                        </span>
+                      )}
+                      {gamertagStatus === 'unavailable' && field.value.length >= 2 && field.value !== currentUser?.gamertag && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                          ✗ Taken
+                        </span>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              ) : (
+                <FormItem>
+                  <FormLabel>Gamertag</FormLabel>
+                  <p className="py-2 truncate max-w-sm">{field.value || "N/A"}</p>
                 </FormItem>
               )
             }

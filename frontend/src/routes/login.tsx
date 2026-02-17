@@ -23,7 +23,9 @@ import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 
 const formSchema = z.object({
-  username: z.email(),
+  username: z
+    .string()
+    .min(1, { message: "Email or Gamertag is required" }),
   password: z
     .string()
     .min(1, { message: "Password is required" })
@@ -84,12 +86,12 @@ function Login() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email or Gamertag</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="email-input"
-                      placeholder="user@example.com"
-                      type="email"
+                      placeholder="user@example.com or your_gamertag"
+                      type="text"
                       {...field}
                     />
                   </FormControl>

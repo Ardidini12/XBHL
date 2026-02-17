@@ -35,6 +35,10 @@ const formSchema = z
   .object({
     email: z.email({ message: "Invalid email address" }),
     full_name: z.string().optional(),
+    gamertag: z
+      .string()
+      .min(2, { message: "Gamertag must be at least 2 characters" })
+      .max(20, { message: "Gamertag must be at most 20 characters" }),
     password: z
       .string()
       .min(1, { message: "Password is required" })
@@ -64,6 +68,7 @@ const AddUser = () => {
     defaultValues: {
       email: "",
       full_name: "",
+      gamertag: "",
       password: "",
       confirm_password: "",
       is_superuser: false,
@@ -86,7 +91,9 @@ const AddUser = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    // Remove confirm_password before submitting
+    const { confirm_password: _confirm_password, ...submitData } = data
+    mutation.mutate(submitData as UserCreate)
   }
 
   return (
@@ -136,6 +143,27 @@ const AddUser = () => {
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Full name" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gamertag"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Gamertag <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Gamertag"
+                        type="text"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
