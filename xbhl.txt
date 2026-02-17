@@ -1,0 +1,496 @@
+Title: XBHL – Xblade Hockey League Platform
+1. Objective (Elevator Pitch)
+
+We are building XBHL (Xblade Hockey League) — a platform that manages custom NHL Pro Clubs leagues on top of EA’s Pro Clubs infrastructure.
+
+Because EA deletes historical match data after a period of time, our platform will:
+
+Persist all match data permanently
+
+Build complete league and player career history
+
+Enable long-term analytics, performance tracking, and prediction features
+
+Support multiple leagues (3’s, 6’s) running concurrently
+
+The system must support:
+
+League & season management
+
+Match ingestion via EA API
+
+Concurrent, configurable schedulers
+
+Full historical tracking (career mode)
+
+Admin-controlled operations
+
+User registration and authentication
+
+2. System Architecture Overview (Think in Layers)
+
+We are designing this in clear layers:
+
+Layer 1 – Presentation (Frontend)
+
+React (Vite)
+
+Dashboard UI for Admin & Users
+
+League, Season, Club, Player views
+
+Scheduler controls
+
+Authentication UI
+
+Layer 2 – Application Layer (Backend API)
+
+FastAPI (Python)
+
+RESTful endpoints
+
+Business logic enforcement
+
+Scheduler orchestration
+
+Authentication & authorization
+
+Match ingestion processing
+
+Layer 3 – Data Layer
+
+PostgreSQL (Supabase)
+
+Relational structure
+
+Transaction pooler
+
+Supabase v3 for assets
+
+Timezone: America/New_York (EST enforced globally)
+
+Layer 4 – External Integration
+
+EA Pro Clubs API endpoints:
+
+Club search → returns clubId
+
+Matches by clubId → returns private matches (JSON)
+
+3. Core Domain Model (Data & Logic)
+Entities & Relationships
+League
+
+Has many Seasons
+
+Has its own Scheduler
+
+Can be 3’s or 6’s
+
+Season
+
+Belongs to a League
+
+Has start_date, end_date
+
+Has many Clubs
+
+Has many Matches
+
+Club
+
+Can belong to multiple Seasons
+
+Has many Players
+
+Has EA clubId
+
+Has many Matches
+
+Player
+
+Identified by unique gamertag
+
+Can belong to a Club
+
+Has career history across:
+
+Leagues
+
+Seasons
+
+Clubs
+
+Matches
+
+May exist in DB even if not registered
+
+Match
+
+Identified uniquely by:
+
+match_id
+
+timestamp
+
+Belongs to:
+
+Season
+
+League
+
+Club(s)
+
+Stored only once (id + timestamp uniqueness constraint)
+
+4. Authentication & User System
+User Registration
+
+Users must register with:
+
+fullname
+
+gamertag (unique)
+
+email (unique)
+
+password (encrypted)
+
+Login
+
+Login with:
+
+email OR gamertag
+
+password
+
+Roles
+Admin
+
+Separate secure login
+
+Full CRUD access to:
+
+Users
+
+Leagues
+
+Seasons
+
+Clubs
+
+Players
+
+Matches
+
+Schedulers
+
+Can:
+
+Start / Stop / Resume / Delete schedulers
+
+Player
+
+Can:
+
+View profile
+
+View career history
+
+View leagues/seasons they participated in
+
+5. Scheduler System (Critical Component)
+Objective
+
+Each League must have its own independent scheduler.
+
+Admin defines:
+
+Active days (e.g., Tuesday, Wednesday)
+
+Time window (e.g., 8:00 PM – 11:30 PM EST)
+
+Interval (e.g., every 2 minutes)
+
+Requirements
+
+Must run concurrently (multiple leagues)
+
+Must not interfere with each other
+
+Must respect EST timezone globally
+
+Must be able to start/stop independently
+
+Must only save new matches
+
+Must deduplicate by (match_id + timestamp)
+
+Must extract and store full match JSON payload (structure refinement later)
+
+Scheduler Flow
+
+For each League → each Season:
+
+Fetch club IDs using club name
+
+Fetch private matches using clubId
+
+Filter matches:
+
+Within configured time window
+
+Within season date range
+
+Deduplicate by match_id + timestamp
+
+Save to DB
+
+Associate match with:
+
+League
+
+Season
+
+Club(s)
+
+Players
+
+6. User Stories
+Admin Stories
+
+As an Admin, I want to create a League, so I can organize 3’s or 6’s competitions.
+
+As an Admin, I want to create Seasons inside a League, so competitions are time-based.
+
+As an Admin, I want to assign Clubs and Players to a Season.
+
+As an Admin, I want to configure a Scheduler for a League, so match data is automatically collected.
+
+As an Admin, I want to run multiple Schedulers at the same time.
+
+As an Admin, I want to stop or modify a Scheduler without affecting others.
+
+As an Admin, I want full CRUD over all entities.
+
+Player Stories
+
+As a Player, I want to register using my gamertag.
+
+As a Player, I want to see my career history across leagues.
+
+As a Player, I want to see all matches I participated in.
+
+As a Player, I want to see historical stats even if EA deleted them.
+
+7. Visual Requirements & Flow
+Admin Flow
+
+Dashboard:
+
+If no leagues → “Create League” button
+
+If leagues exist → List of leagues
+
+League Page:
+
+Show:
+
+League details
+
+Seasons list
+
+If no seasons → “Create Season”
+
+Season Page:
+
+Show:
+
+Season details
+
+Clubs
+
+Players
+
+Scheduler status
+
+Controls:
+
+Add Clubs
+
+Add Players
+
+Configure Scheduler
+
+Start/Stop Scheduler
+
+Scheduler UI:
+
+Select:
+
+Days of week
+
+Time range
+
+Interval
+
+Show:
+
+Status (Running / Stopped)
+
+Last run
+
+Total matches ingested
+
+Player UI
+
+Simple login/register page
+
+Dashboard:
+
+Profile icon
+
+Leagues participated in
+
+Career stats summary
+
+Profile Page:
+
+Career timeline
+
+Matches list
+
+Stats (future enhancement)
+
+8. Data Requirements
+
+We need relational tables for:
+
+users
+
+roles
+
+leagues
+
+seasons
+
+clubs
+
+players
+
+matches
+
+scheduler_configs
+
+scheduler_runs
+
+player_match_history
+
+club_season_relationship
+
+player_season_relationship
+
+Critical Constraints:
+
+email UNIQUE
+
+gamertag UNIQUE
+
+match_id + timestamp UNIQUE
+
+All timestamps stored in UTC but interpreted as EST
+
+9. Edge Cases
+
+Player not registered → still store data
+
+Player registers later → link existing historical data
+
+Multiple leagues running simultaneously
+
+API downtime
+
+Duplicate match payload
+
+Timezone drift
+
+Scheduler crash recovery
+
+10. Acceptance Criteria (Done When…)
+
+✅ Admin can create a league
+✅ Admin can create seasons under a league
+✅ Admin can add clubs & players
+✅ Admin can configure scheduler per league
+✅ Multiple schedulers run concurrently
+✅ Matches are stored only once
+✅ Matches appear in:
+
+Club profiles
+
+Player profiles
+
+Season view
+
+✅ Player can:
+
+Register
+
+Login
+
+View career history
+
+✅ System enforces EST timezone
+✅ Data persists even if EA deletes it
+
+11. Long-Term Vision (Strategic Layer)
+
+Phase 1:
+
+Data persistence
+
+History building
+
+Scheduler reliability
+
+Phase 2:
+
+Player analytics
+
+Performance trends
+
+Team analytics
+
+Phase 3:
+
+Prediction models
+
+Skill development metrics
+
+Ranking systems
+
+12. Senior Engineering Notes
+
+To build this correctly:
+
+Scheduler must be implemented as a background task manager (Celery / Async workers / APScheduler / Redis-backed queue recommended)
+
+Each scheduler must have:
+
+Its own job ID
+
+Isolation from other jobs
+
+Use DB-level unique constraints for deduplication (not only application logic)
+
+Use service layer pattern in backend:
+
+controllers
+
+services
+
+repositories
+
+Design schema with historical integrity (never overwrite match data)
+
+Log every scheduler run
