@@ -7,7 +7,7 @@ const socialLinks = [
     href: "https://discord.com",
     label: "Discord",
   },
-  { icon: FaXTwitter, href: "https://x.com/xbhl", label: "X" },
+  { icon: FaXTwitter, href: "https://x.com", label: "X" },
 ]
 
 export function Footer() {
