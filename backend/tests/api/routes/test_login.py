@@ -83,11 +83,13 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     email = random_email()
     password = random_lower_string()
     new_password = random_lower_string()
+    gamertag = random_lower_string()
 
     user_create = UserCreate(
         email=email,
         full_name="Test User",
         password=password,
+        gamertag=gamertag,
         is_active=True,
         is_superuser=False,
     )
@@ -137,8 +139,9 @@ def test_login_with_bcrypt_password_upgrades_to_argon2(
     bcrypt_hasher = BcryptHasher()
     bcrypt_hash = bcrypt_hasher.hash(password)
     assert bcrypt_hash.startswith("$2")  # bcrypt hashes start with $2
+    gamertag = random_lower_string()
 
-    user = User(email=email, hashed_password=bcrypt_hash, is_active=True)
+    user = User(email=email, hashed_password=bcrypt_hash, gamertag=gamertag, is_active=True)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -170,9 +173,10 @@ def test_login_with_argon2_password_keeps_hash(client: TestClient, db: Session) 
     # Create an argon2 hash (current default)
     argon2_hash = get_password_hash(password)
     assert argon2_hash.startswith("$argon2")
+    gamertag = random_lower_string()
 
     # Create user with argon2 hash
-    user = User(email=email, hashed_password=argon2_hash, is_active=True)
+    user = User(email=email, hashed_password=argon2_hash, gamertag=gamertag, is_active=True)
     db.add(user)
     db.commit()
     db.refresh(user)

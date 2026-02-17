@@ -28,6 +28,33 @@ from app.utils import generate_new_account_email, send_email
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+@router.get("/check-availability")
+def check_availability(
+    session: SessionDep, email: str | None = None, gamertag: str | None = None
+) -> dict[str, bool]:
+    """
+    Check if an email or gamertag is available.
+    This endpoint is used for real-time validation during registration.
+    Returns {"available": true/false}
+    """
+    if not email and not gamertag:
+        raise HTTPException(
+            status_code=400,
+            detail="Either email or gamertag parameter must be provided"
+        )
+    
+    if email:
+        user = crud.get_user_by_email(session=session, email=email)
+        return {"available": user is None}
+    
+    if gamertag:
+        user = crud.get_user_by_gamertag(session=session, gamertag=gamertag)
+        return {"available": user is None}
+    
+    return {"available": False}
+
+
+
 @router.get(
     "/",
     dependencies=[Depends(get_current_active_superuser)],
@@ -152,6 +179,12 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
             status_code=400,
             detail="The user with this email already exists in the system",
         )
+    user = crud.get_user_by_gamertag(session=session, gamertag=user_in.gamertag)
+    if user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this gamertag already exists in the system",
+        )                                   
     user_create = UserCreate.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
     return user

@@ -35,14 +35,20 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     session_user = session.exec(statement).first()
     return session_user
 
+def get_user_by_gamertag(*, session: Session, gamertag: str) -> User | None:
+    statement = select(User).where(User.gamertag == gamertag)
+    session_user = session.exec(statement).first()
+    return session_user
 
 # Dummy hash to use for timing attack prevention when user is not found
 # This is an Argon2 hash of a random password, used to ensure constant-time comparison
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
 
 
-def authenticate(*, session: Session, email: str, password: str) -> User | None:
-    db_user = get_user_by_email(session=session, email=email)
+def authenticate(*, session: Session, email_or_gamertag: str, password: str) -> User | None:
+    db_user = get_user_by_email(session=session, email=email_or_gamertag)
+    if not db_user:
+        db_user = get_user_by_gamertag(session=session, gamertag=email_or_gamertag)
     if not db_user:
         # Prevent timing attacks by running password verification even when user doesn't exist
         # This ensures the response time is similar whether or not the email exists
