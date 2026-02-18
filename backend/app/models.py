@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 
 from pydantic import EmailStr
 from sqlalchemy import DateTime
@@ -70,10 +71,14 @@ class UsersPublic(SQLModel):
 
 #Leagues Model
 
+class LeagueType(str, Enum):
+    THREE_V_THREE = "3v3"
+    SIX_V_SIX = "6v6"
+
 #Base Class
 class LeagueBase(SQLModel):
     name: str = Field(unique=True, index=True, max_length=255)
-    league_type: str = Field(max_length=10)
+    league_type: LeagueType = Field(max_length=10)
     is_active: bool = True
     description: str | None = Field(default=None)
 
@@ -86,7 +91,7 @@ class LeagueCreate(LeagueBase):
 class LeagueUpdate(LeagueBase):
     name: str | None = Field(default=None, max_length=255)
     is_active: bool | None = Field(default=None)
-    league_type: str | None = Field(default=None, max_length=10)
+    league_type: LeagueType | None = Field(default=None, max_length=10)
     description: str | None = Field(default=None)
 
 # Database model, database table inferred from class name
