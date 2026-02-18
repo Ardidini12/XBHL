@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate
+from app.models import User, UserCreate, UserUpdate, League, LeagueCreate, LeagueUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -63,3 +63,27 @@ def authenticate(*, session: Session, email_or_gamertag: str, password: str) -> 
         session.commit()
         session.refresh(db_user)
     return db_user
+
+
+#League CRUD
+
+def get_league_by_name(*, session: Session, name: str) -> League | None:
+    statement = select(League).where(League.name == name)
+    session_league = session.exec(statement).first()
+    return session_league
+
+
+def create_league(*, session: Session, league_create: LeagueCreate) -> League:
+    db_obj = League.model_validate(league_create)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+def update_league(*, session: Session, db_league: League, league_in: LeagueUpdate) -> League:
+    league_data = league_in.model_dump(exclude_unset=True)
+    db_league.sqlmodel_update(league_data)
+    session.add(db_league)
+    session.commit()
+    session.refresh(db_league)
+    return db_league

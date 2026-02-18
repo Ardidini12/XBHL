@@ -68,6 +68,52 @@ class UsersPublic(SQLModel):
     count: int
 
 
+#Leagues Model
+
+#Base Class
+class LeagueBase(SQLModel):
+    name: str = Field(unique=True, index=True, max_length=255)
+    league_type: str = Field(max_length=10)
+    is_active: bool = True
+    description: str | None = Field(default=None)
+
+# Properties to receive via API on creation
+class LeagueCreate(LeagueBase):
+    pass
+
+
+# Properties to receive via API on update, all are optional
+class LeagueUpdate(LeagueBase):
+    name: str | None = Field(default=None, max_length=255)
+    is_active: bool | None = Field(default=None)
+    league_type: str | None = Field(default=None, max_length=10)
+    description: str | None = Field(default=None)
+
+# Database model, database table inferred from class name
+class League(LeagueBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+# Properties to return via API, id is always required
+class LeaguePublic(LeagueBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+#Contains list of Leagues and count
+class LeaguesPublic(SQLModel):
+    data: list[LeaguePublic]
+    count: int
+
+
+
 # Generic message
 class Message(SQLModel):
     message: str
