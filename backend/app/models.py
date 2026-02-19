@@ -78,7 +78,7 @@ class LeagueType(str, Enum):
 #Base Class
 class LeagueBase(SQLModel):
     name: str = Field(unique=True, index=True, max_length=255)
-    league_type: LeagueType = Field(max_length=10)
+    league_type: LeagueType
     is_active: bool = True
     description: str | None = Field(default=None)
 
@@ -91,7 +91,7 @@ class LeagueCreate(LeagueBase):
 class LeagueUpdate(LeagueBase):
     name: str | None = Field(default=None, max_length=255)
     is_active: bool | None = Field(default=None)
-    league_type: LeagueType | None = Field(default=None, max_length=10)
+    league_type: LeagueType | None = Field(default=None)
     description: str | None = Field(default=None)
 
 # Database model, database table inferred from class name

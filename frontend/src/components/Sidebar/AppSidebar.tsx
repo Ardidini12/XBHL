@@ -1,4 +1,4 @@
-import { Home, Users } from "lucide-react"
+import { Home, Trophy, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -20,7 +20,11 @@ export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
   const items = currentUser?.is_superuser
-    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
+    ? [
+      ...baseItems,
+      { icon: Users, title: "Admin", path: "/admin" },
+      { icon: Trophy, title: "Leagues", path: "/leagues" },
+    ]
     : baseItems
 
   return (
