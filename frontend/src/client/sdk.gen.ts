@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersCheckAvailabilityData, UsersCheckAvailabilityResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersCheckAvailabilityData, UsersCheckAvailabilityResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueByIdData, LeaguesReadLeagueByIdResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse } from './types.gen';
 
 export class LoginService {
     /**
@@ -377,6 +377,117 @@ export class UtilsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/utils/health-check/'
+        });
+    }
+}
+
+export class LeaguesService {
+    /**
+     * Read Leagues
+     * Retrieve leagues.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns LeaguesPublic Successful Response
+     * @throws ApiError
+     */
+    public static readLeagues(data: LeaguesReadLeaguesData = {}): CancelablePromise<LeaguesReadLeaguesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/leagues/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Create League
+     * Create a new league.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns LeaguePublic Successful Response
+     * @throws ApiError
+     */
+    public static createLeague(data: LeaguesCreateLeagueData): CancelablePromise<LeaguesCreateLeagueResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/leagues/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Read League By Id
+     * Get a specific league by id.
+     * @param data The data for the request.
+     * @param data.leagueId
+     * @returns LeaguePublic Successful Response
+     * @throws ApiError
+     */
+    public static readLeagueById(data: LeaguesReadLeagueByIdData): CancelablePromise<LeaguesReadLeagueByIdResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/leagues/{league_id}',
+            path: {
+                league_id: data.leagueId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Update League
+     * Update a league.
+     * @param data The data for the request.
+     * @param data.leagueId
+     * @param data.requestBody
+     * @returns LeaguePublic Successful Response
+     * @throws ApiError
+     */
+    public static updateLeague(data: LeaguesUpdateLeagueData): CancelablePromise<LeaguesUpdateLeagueResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/leagues/{league_id}',
+            path: {
+                league_id: data.leagueId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Delete League
+     * Delete a league.
+     * @param data The data for the request.
+     * @param data.leagueId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteLeague(data: LeaguesDeleteLeagueData): CancelablePromise<LeaguesDeleteLeagueResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/leagues/{league_id}',
+            path: {
+                league_id: data.leagueId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
 }

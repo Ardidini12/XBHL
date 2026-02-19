@@ -197,3 +197,68 @@ export type UtilsTestEmailData = {
 export type UtilsTestEmailResponse = (Message);
 
 export type UtilsHealthCheckResponse = (boolean);
+
+// League types
+export type LeagueType = '3v3' | '6v6';
+
+export type LeagueCreate = {
+    name: string;
+    league_type: LeagueType;
+    is_active?: boolean;
+    description?: (string | null);
+};
+
+export type LeaguePublic = {
+    name: string;
+    league_type: LeagueType;
+    is_active?: boolean;
+    description?: (string | null);
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type LeaguesPublic = {
+    data: Array<LeaguePublic>;
+    count: number;
+};
+
+export type LeagueUpdate = {
+    name?: (string | null);
+    league_type?: (LeagueType | null);
+    is_active?: (boolean | null);
+    description?: (string | null);
+};
+
+// League request/response types
+export type LeaguesReadLeaguesData = {
+    skip?: number;
+    limit?: number;
+};
+
+export type LeaguesReadLeaguesResponse = (LeaguesPublic);
+
+export type LeaguesCreateLeagueData = {
+    requestBody: LeagueCreate;
+};
+
+export type LeaguesCreateLeagueResponse = (LeaguePublic);
+
+export type LeaguesReadLeagueByIdData = {
+    leagueId: string;
+};
+
+export type LeaguesReadLeagueByIdResponse = (LeaguePublic);
+
+export type LeaguesUpdateLeagueData = {
+    leagueId: string;
+    requestBody: LeagueUpdate;
+};
+
+export type LeaguesUpdateLeagueResponse = (LeaguePublic);
+
+export type LeaguesDeleteLeagueData = {
+    leagueId: string;
+};
+
+export type LeaguesDeleteLeagueResponse = (Message);
