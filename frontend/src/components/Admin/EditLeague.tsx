@@ -138,7 +138,7 @@ const EditLeague = ({ league, onSuccess }: EditLeagueProps) => {
           </FormLabel>
           <FormControl>
            <Input
-            placeholder="e.g. Summer Championship"
+            placeholder="League Name"
             type="text"
             {...field}
            />

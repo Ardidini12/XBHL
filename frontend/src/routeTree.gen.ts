@@ -18,6 +18,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutLeaguesRouteImport } from './routes/_layout/leagues'
+import { Route as LayoutLeaguesLeagueIdRouteImport } from './routes/_layout/leagues.$leagueId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -63,6 +64,11 @@ const LayoutLeaguesRoute = LayoutLeaguesRouteImport.update({
   path: '/leagues',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutLeaguesLeagueIdRoute = LayoutLeaguesLeagueIdRouteImport.update({
+  id: '/leagues/$leagueId',
+  path: '/leagues/$leagueId',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRoute
   '/settings': typeof LayoutSettingsRoute
   '/leagues': typeof LayoutLeaguesRoute
+  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/admin': typeof LayoutAdminRoute
   '/settings': typeof LayoutSettingsRoute
   '/leagues': typeof LayoutLeaguesRoute
+  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/leagues': typeof LayoutLeaguesRoute
+  '/_layout/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/settings'
     | '/leagues'
+    | '/leagues/$leagueId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/settings'
     | '/leagues'
+    | '/leagues/$leagueId'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_layout/admin'
     | '/_layout/settings'
     | '/_layout/leagues'
+    | '/_layout/leagues/$leagueId'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -203,12 +215,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLeaguesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/leagues/$leagueId': {
+      id: '/_layout/leagues/$leagueId'
+      path: '/leagues/$leagueId'
+      fullPath: '/leagues/$leagueId'
+      preLoaderRoute: typeof LayoutLeaguesLeagueIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutLeaguesRoute: typeof LayoutLeaguesRoute
+  LayoutLeaguesLeagueIdRoute: typeof LayoutLeaguesLeagueIdRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
@@ -216,6 +236,7 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutLeaguesRoute: LayoutLeaguesRoute,
+  LayoutLeaguesLeagueIdRoute: LayoutLeaguesLeagueIdRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }

@@ -105,6 +105,8 @@ class League(LeagueBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    seasons: list["Season"] = Relationship(back_populates="league")
+    
 
 # Properties to return via API, id is always required
 class LeaguePublic(LeagueBase):
@@ -118,6 +120,47 @@ class LeaguesPublic(SQLModel):
     count: int
 
 
+#Season Model
+class SeasonBase(SQLModel):
+    name: str = Field(max_length=255)
+    league_id: uuid.UUID = Field(foreign_key="league.id")
+
+class SeasonCreate(SeasonBase):
+    pass  
+
+class SeasonUpdate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+
+class Season(SeasonBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    start_date: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    end_date: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    league: League = Relationship(back_populates="seasons")
+
+class SeasonPublic(SeasonBase):
+    id: uuid.UUID
+    start_date: datetime
+    end_date: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+class SeasonsPublic(SQLModel):
+    data: list[SeasonPublic]
+    count: int
 
 # Generic message
 class Message(SQLModel):
