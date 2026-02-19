@@ -16,8 +16,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutLeaguesRouteImport } from './routes/_layout/leagues'
+import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutLeaguesLeagueIdRouteImport } from './routes/_layout/leagues.$leagueId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -54,20 +54,20 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutAdminRoute = LayoutAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const LayoutLeaguesRoute = LayoutLeaguesRouteImport.update({
   id: '/leagues',
   path: '/leagues',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutLeaguesLeagueIdRoute = LayoutLeaguesLeagueIdRouteImport.update({
-  id: '/leagues/$leagueId',
-  path: '/leagues/$leagueId',
+const LayoutAdminRoute = LayoutAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLeaguesLeagueIdRoute = LayoutLeaguesLeagueIdRouteImport.update({
+  id: '/$leagueId',
+  path: '/$leagueId',
+  getParentRoute: () => LayoutLeaguesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -77,8 +77,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
-  '/leagues': typeof LayoutLeaguesRoute
   '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
 }
 export interface FileRoutesByTo {
@@ -87,10 +87,10 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
-  '/leagues': typeof LayoutLeaguesRoute
-  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
   '/': typeof LayoutIndexRoute
+  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -100,10 +100,10 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/leagues': typeof LayoutLeaguesRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
-  '/_layout/leagues': typeof LayoutLeaguesRoute
-  '/_layout/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,8 +114,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/settings'
     | '/leagues'
+    | '/settings'
     | '/leagues/$leagueId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -124,10 +124,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/settings'
     | '/leagues'
-    | '/leagues/$leagueId'
+    | '/settings'
     | '/'
+    | '/leagues/$leagueId'
   id:
     | '__root__'
     | '/_layout'
@@ -136,10 +136,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
-    | '/_layout/settings'
     | '/_layout/leagues'
-    | '/_layout/leagues/$leagueId'
+    | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/leagues/$leagueId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -201,13 +201,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/admin': {
-      id: '/_layout/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof LayoutAdminRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/_layout/leagues': {
       id: '/_layout/leagues'
       path: '/leagues'
@@ -215,28 +208,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLeaguesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/admin': {
+      id: '/_layout/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof LayoutAdminRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/leagues/$leagueId': {
       id: '/_layout/leagues/$leagueId'
-      path: '/leagues/$leagueId'
+      path: '/$leagueId'
       fullPath: '/leagues/$leagueId'
       preLoaderRoute: typeof LayoutLeaguesLeagueIdRouteImport
-      parentRoute: typeof LayoutRoute
+      parentRoute: typeof LayoutLeaguesRoute
     }
   }
 }
 
+interface LayoutLeaguesRouteChildren {
+  LayoutLeaguesLeagueIdRoute: typeof LayoutLeaguesLeagueIdRoute
+}
+
+const LayoutLeaguesRouteChildren: LayoutLeaguesRouteChildren = {
+  LayoutLeaguesLeagueIdRoute: LayoutLeaguesLeagueIdRoute,
+}
+
+const LayoutLeaguesRouteWithChildren = LayoutLeaguesRoute._addFileChildren(
+  LayoutLeaguesRouteChildren,
+)
+
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
-  LayoutLeaguesRoute: typeof LayoutLeaguesRoute
-  LayoutLeaguesLeagueIdRoute: typeof LayoutLeaguesLeagueIdRoute
+  LayoutLeaguesRoute: typeof LayoutLeaguesRouteWithChildren
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
-  LayoutLeaguesRoute: LayoutLeaguesRoute,
-  LayoutLeaguesLeagueIdRoute: LayoutLeaguesLeagueIdRoute,
+  LayoutLeaguesRoute: LayoutLeaguesRouteWithChildren,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
