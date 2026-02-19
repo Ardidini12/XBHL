@@ -262,3 +262,73 @@ export type LeaguesDeleteLeagueData = {
 };
 
 export type LeaguesDeleteLeagueResponse = (Message);
+
+// Season types
+export type SeasonCreate = {
+    name: string;
+    league_id: string;
+};
+
+export type SeasonPublic = {
+    name: string;
+    league_id: string;
+    id: string;
+    start_date: string;
+    end_date?: (string | null);
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type SeasonsPublic = {
+    data: Array<SeasonPublic>;
+    count: number;
+};
+
+export type SeasonUpdate = {
+    name?: (string | null);
+};
+
+// Season request/response types
+export type SeasonsReadSeasonsData = {
+    leagueId: string;
+    skip?: number;
+    limit?: number;
+};
+
+export type SeasonsReadSeasonsResponse = SeasonsPublic;
+
+export type SeasonsCreateSeasonData = {
+    leagueId: string;
+    requestBody: SeasonCreate;
+};
+
+export type SeasonsCreateSeasonResponse = SeasonPublic;
+
+export type SeasonsGetSeasonData = {
+    leagueId: string;
+    seasonId: string;
+};
+
+export type SeasonsGetSeasonResponse = SeasonPublic;
+
+export type SeasonsUpdateSeasonData = {
+    leagueId: string;
+    seasonId: string;
+    requestBody: SeasonUpdate;
+};
+
+export type SeasonsUpdateSeasonResponse = SeasonPublic;
+
+export type SeasonsEndSeasonData = {
+    leagueId: string;
+    seasonId: string;
+};
+
+export type SeasonsEndSeasonResponse = SeasonPublic;
+
+export type SeasonsDeleteSeasonData = {
+    leagueId: string;
+    seasonId: string;
+};
+
+export type SeasonsDeleteSeasonResponse = Message;

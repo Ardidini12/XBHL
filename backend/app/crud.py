@@ -1,9 +1,15 @@
+import uuid
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, func, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate, League, LeagueCreate, LeagueUpdate
+from app.models import (
+    User, UserCreate, UserUpdate,
+    League, LeagueCreate, LeagueUpdate,
+    Season, SeasonCreate, SeasonUpdate,
+)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -87,3 +93,52 @@ def update_league(*, session: Session, db_league: League, league_in: LeagueUpdat
     session.commit()
     session.refresh(db_league)
     return db_league
+
+
+# Season CRUD
+
+def create_season(*, session: Session, season_create: SeasonCreate) -> Season:
+    db_obj = Season.model_validate(season_create)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def get_seasons_by_league(
+    *, session: Session, league_id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> tuple[list[Season], int]:
+    count = session.exec(
+        select(func.count()).select_from(Season).where(Season.league_id == league_id)
+    ).one()
+    seasons = session.exec(
+        select(Season)
+        .where(Season.league_id == league_id)
+        .order_by(col(Season.created_at).desc())
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    return list(seasons), count
+
+
+def get_season_by_id(*, session: Session, season_id: uuid.UUID) -> Season | None:
+    return session.get(Season, season_id)
+
+
+def end_season(*, session: Session, db_season: Season) -> Season:
+    db_season.end_date = datetime.now(timezone.utc)
+    db_season.updated_at = datetime.now(timezone.utc)
+    session.add(db_season)
+    session.commit()
+    session.refresh(db_season)
+    return db_season
+
+
+def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdate) -> Season:
+    season_data = season_in.model_dump(exclude_unset=True)
+    db_season.sqlmodel_update(season_data)
+    db_season.updated_at = datetime.now(timezone.utc)
+    session.add(db_season)
+    session.commit()
+    session.refresh(db_season)
+    return db_season

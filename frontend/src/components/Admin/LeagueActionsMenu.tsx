@@ -1,11 +1,14 @@
 import { EllipsisVertical } from "lucide-react"
 import { useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
 
 import type { LeaguePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
  DropdownMenu,
  DropdownMenuContent,
+ DropdownMenuItem,
+ DropdownMenuSeparator,
  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import DeleteLeague from "./DeleteLeague"
@@ -17,6 +20,7 @@ interface LeagueActionsMenuProps {
 
 export const LeagueActionsMenu = ({ league }: LeagueActionsMenuProps) => {
  const [open, setOpen] = useState(false)
+ const navigate = useNavigate()
 
  return (
   <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -26,6 +30,15 @@ export const LeagueActionsMenu = ({ league }: LeagueActionsMenuProps) => {
     </Button>
    </DropdownMenuTrigger>
    <DropdownMenuContent align="end">
+    <DropdownMenuItem
+     onSelect={() => {
+      setOpen(false)
+      navigate({ to: "/leagues/$leagueId", params: { leagueId: league.id } })
+     }}
+    >
+     Enter League
+    </DropdownMenuItem>
+    <DropdownMenuSeparator />
     <EditLeague league={league} onSuccess={() => setOpen(false)} />
     <DeleteLeague id={league.id} onSuccess={() => setOpen(false)} />
    </DropdownMenuContent>
