@@ -16,6 +16,7 @@ function getLeaguesQueryOptions() {
   return {
     queryFn: () => LeaguesService.readLeagues({ skip: 0, limit: 100 }),
     queryKey: ["leagues"],
+    staleTime: 1000 * 60,
   }
 }
 
@@ -60,21 +61,21 @@ function Leagues() {
   const isLeagueDetail =
     pathname.startsWith("/leagues/") && pathname !== "/leagues"
 
-  if (isLeagueDetail) {
-    return <Outlet />
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Leagues</h1>
-          <p className="text-muted-foreground">Manage 3v3 and 6v6 leagues</p>
+      <div className={isLeagueDetail ? "hidden" : "flex flex-col gap-6"}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Leagues</h1>
+            <p className="text-muted-foreground">Manage 3v3 and 6v6 leagues</p>
+          </div>
+          <AddLeague />
         </div>
-        <AddLeague />
+        <LeaguesTable />
       </div>
-      <LeaguesTable />
-      <Outlet />
+      <div className={isLeagueDetail ? "block" : "hidden"}>
+        <Outlet />
+      </div>
     </div>
   )
 }
