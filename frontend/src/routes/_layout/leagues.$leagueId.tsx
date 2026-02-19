@@ -13,6 +13,7 @@ function getSeasonsQueryOptions(leagueId: string) {
  return {
   queryFn: () => SeasonsService.readSeasons({ leagueId, skip: 0, limit: 100 }),
   queryKey: ["seasons", leagueId],
+  staleTime: 1000 * 60,
  }
 }
 
@@ -20,6 +21,7 @@ function getLeagueQueryOptions(leagueId: string) {
  return {
   queryFn: () => LeaguesService.readLeagueById({ leagueId }),
   queryKey: ["leagues", leagueId],
+  staleTime: 1000 * 60,
  }
 }
 

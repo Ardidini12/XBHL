@@ -5,7 +5,7 @@ import {
   redirect,
   useRouterState,
 } from "@tanstack/react-router"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 
 import { LeaguesService, UsersService } from "@/client"
 import AddLeague from "@/components/Admin/AddLeague"
@@ -60,6 +60,15 @@ function Leagues() {
   const pathname = router.location.pathname
   const isLeagueDetail =
     pathname.startsWith("/leagues/") && pathname !== "/leagues"
+  const [showDetail, setShowDetail] = useState(isLeagueDetail)
+
+  useEffect(() => {
+    if (isLeagueDetail) {
+      const id = setTimeout(() => setShowDetail(true), 50)
+      return () => clearTimeout(id)
+    }
+    setShowDetail(false)
+  }, [isLeagueDetail])
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,8 +82,12 @@ function Leagues() {
         </div>
         <LeaguesTable />
       </div>
-      <div className={isLeagueDetail ? "block" : "hidden"}>
-        <Outlet />
+      <div
+        className={`transition-opacity duration-200 ${
+          showDetail ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {isLeagueDetail && <Outlet />}
       </div>
     </div>
   )
