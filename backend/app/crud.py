@@ -127,6 +127,7 @@ def get_season_by_id(*, session: Session, season_id: uuid.UUID) -> Season | None
 
 def end_season(*, session: Session, db_season: Season) -> Season:
     db_season.end_date = datetime.now(timezone.utc)
+    db_season.updated_at = datetime.now(timezone.utc)
     session.add(db_season)
     session.commit()
     session.refresh(db_season)
@@ -136,6 +137,7 @@ def end_season(*, session: Session, db_season: Season) -> Season:
 def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdate) -> Season:
     season_data = season_in.model_dump(exclude_unset=True)
     db_season.sqlmodel_update(season_data)
+    db_season.updated_at = datetime.now(timezone.utc)
     session.add(db_season)
     session.commit()
     session.refresh(db_season)

@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 
 import type { SeasonPublic } from "@/client"
 import { Badge } from "@/components/ui/badge"
@@ -20,7 +20,7 @@ export const seasonColumns: ColumnDef<SeasonPublic>[] = [
    const date = row.original.start_date
    return (
     <span className="text-sm text-muted-foreground">
-     {format(new Date(date), "PPP")}
+     {format(parseISO(date), "PPP")}
     </span>
    )
   },
@@ -32,7 +32,7 @@ export const seasonColumns: ColumnDef<SeasonPublic>[] = [
    const date = row.original.end_date
    return date ? (
     <span className="text-sm text-muted-foreground">
-     {format(new Date(date), "PPP")}
+     {format(parseISO(date), "PPP")}
     </span>
    ) : (
     <Badge variant="outline" className="text-green-500 border-green-500">

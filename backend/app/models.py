@@ -123,7 +123,7 @@ class LeaguesPublic(SQLModel):
 #Season Model
 class SeasonBase(SQLModel):
     name: str = Field(max_length=255)
-    league_id: uuid.UUID = Field(foreign_key="league.id")
+    league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE")
 
 class SeasonCreate(SeasonBase):
     pass  

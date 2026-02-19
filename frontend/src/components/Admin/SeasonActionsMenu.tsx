@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { SeasonPublic } from "@/client"
 import { SeasonsService } from "@/client"
 import { Button } from "@/components/ui/button"
+import { LoadingButton } from "@/components/ui/loading-button"
 import {
  DropdownMenu,
  DropdownMenuContent,
@@ -42,6 +43,7 @@ export const SeasonActionsMenu = ({ season }: SeasonActionsMenuProps) => {
    }),
   onSuccess: () => {
    showSuccessToast("Season ended successfully")
+   setShowEndDialog(false)
    queryClient.invalidateQueries({ queryKey: ["seasons", season.league_id] })
   },
   onError: handleError.bind(showErrorToast),
@@ -55,6 +57,7 @@ export const SeasonActionsMenu = ({ season }: SeasonActionsMenuProps) => {
    }),
   onSuccess: () => {
    showSuccessToast("Season deleted successfully")
+   setShowDeleteDialog(false)
    queryClient.invalidateQueries({ queryKey: ["seasons", season.league_id] })
   },
   onError: handleError.bind(showErrorToast),
@@ -107,15 +110,19 @@ export const SeasonActionsMenu = ({ season }: SeasonActionsMenuProps) => {
       </DialogDescription>
      </DialogHeader>
      <DialogFooter>
-      <Button variant="outline" onClick={() => setShowEndDialog(false)}>
-       Cancel
-      </Button>
       <Button
-       onClick={() => { endMutation.mutate(); setShowEndDialog(false) }}
+       variant="outline"
+       onClick={() => setShowEndDialog(false)}
        disabled={endMutation.isPending}
       >
-       End Season
+       Cancel
       </Button>
+      <LoadingButton
+       onClick={() => endMutation.mutate()}
+       loading={endMutation.isPending}
+      >
+       End Season
+      </LoadingButton>
      </DialogFooter>
     </DialogContent>
    </Dialog>
@@ -131,16 +138,20 @@ export const SeasonActionsMenu = ({ season }: SeasonActionsMenuProps) => {
       </DialogDescription>
      </DialogHeader>
      <DialogFooter>
-      <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-       Cancel
-      </Button>
       <Button
-       variant="destructive"
-       onClick={() => { deleteMutation.mutate(); setShowDeleteDialog(false) }}
+       variant="outline"
+       onClick={() => setShowDeleteDialog(false)}
        disabled={deleteMutation.isPending}
       >
-       Delete
+       Cancel
       </Button>
+      <LoadingButton
+       variant="destructive"
+       onClick={() => deleteMutation.mutate()}
+       loading={deleteMutation.isPending}
+      >
+       Delete
+      </LoadingButton>
      </DialogFooter>
     </DialogContent>
    </Dialog>

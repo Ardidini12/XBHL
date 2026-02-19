@@ -24,8 +24,13 @@ function getLeagueQueryOptions(leagueId: string) {
 export const Route = createFileRoute("/_layout/leagues/$leagueId")({
  component: LeagueDetail,
  beforeLoad: async () => {
-  const user = await UsersService.readUserMe()
-  if (!user.is_superuser) {
+  try {
+   const user = await UsersService.readUserMe()
+   if (!user.is_superuser) {
+    throw redirect({ to: "/" })
+   }
+  } catch (e) {
+   if (e && typeof e === "object" && "to" in e) throw e
    throw redirect({ to: "/" })
   }
  },
