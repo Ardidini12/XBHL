@@ -21,7 +21,7 @@ export const LeagueActionsMenu = ({ league }: LeagueActionsMenuProps) => {
  return (
   <DropdownMenu open={open} onOpenChange={setOpen}>
    <DropdownMenuTrigger asChild>
-    <Button variant="ghost" size="icon">
+    <Button variant="ghost" size="icon" aria-label="More actions">
      <EllipsisVertical />
     </Button>
    </DropdownMenuTrigger>

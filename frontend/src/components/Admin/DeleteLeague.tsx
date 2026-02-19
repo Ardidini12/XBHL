@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
 
 import { LeaguesService } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -28,7 +27,6 @@ const DeleteLeague = ({ id, onSuccess }: DeleteLeagueProps) => {
  const [isOpen, setIsOpen] = useState(false)
  const queryClient = useQueryClient()
  const { showSuccessToast, showErrorToast } = useCustomToast()
- const { handleSubmit } = useForm()
 
  const mutation = useMutation({
   mutationFn: (leagueId: string) =>
@@ -59,7 +57,7 @@ const DeleteLeague = ({ id, onSuccess }: DeleteLeagueProps) => {
     Delete League
    </DropdownMenuItem>
    <DialogContent className="sm:max-w-md">
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit() }}>
      <DialogHeader>
       <DialogTitle>Delete League</DialogTitle>
       <DialogDescription>

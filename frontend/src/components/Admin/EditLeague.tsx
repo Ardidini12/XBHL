@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Pencil } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -93,6 +93,18 @@ const EditLeague = ({ league, onSuccess }: EditLeagueProps) => {
   },
  })
 
+ // Reset form with fresh league values every time the dialog opens
+ useEffect(() => {
+  if (isOpen) {
+   form.reset({
+    name: league.name,
+    league_type: league.league_type,
+    is_active: league.is_active,
+    description: league.description ?? "",
+   })
+  }
+ }, [isOpen, league, form])
+
  const onSubmit = (data: FormData) => {
   mutation.mutate(data)
  }
@@ -144,7 +156,7 @@ const EditLeague = ({ league, onSuccess }: EditLeagueProps) => {
           <FormLabel>League Type</FormLabel>
           <Select
            onValueChange={field.onChange}
-           defaultValue={field.value}
+           value={field.value}
           >
            <FormControl>
             <SelectTrigger>
