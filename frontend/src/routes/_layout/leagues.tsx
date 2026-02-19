@@ -1,5 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useRouterState,
+} from "@tanstack/react-router"
 import { Suspense } from "react"
 
 import { LeaguesService, UsersService } from "@/client"
@@ -50,6 +55,15 @@ function LeaguesTable() {
 }
 
 function Leagues() {
+  const router = useRouterState()
+  const pathname = router.location.pathname
+  const isLeagueDetail =
+    pathname.startsWith("/leagues/") && pathname !== "/leagues"
+
+  if (isLeagueDetail) {
+    return <Outlet />
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
