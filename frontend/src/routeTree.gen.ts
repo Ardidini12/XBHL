@@ -106,6 +106,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/settings'
+    | '/leagues'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'

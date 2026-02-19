@@ -84,10 +84,13 @@ const AddLeague = () => {
  })
 
  const onSubmit = (data: FormData) => {
-  mutation.mutate({
-   ...data,
-   description: data.description || null,
-  } as LeagueCreate)
+  const payload: LeagueCreate = {
+   name: data.name,
+   league_type: data.league_type,
+   is_active: data.is_active,
+   description: data.description ?? null,
+  }
+  mutation.mutate(payload)
  }
 
  return (
@@ -121,7 +124,6 @@ const AddLeague = () => {
             placeholder="e.g. Summer Championship"
             type="text"
             {...field}
-            required
            />
           </FormControl>
           <FormMessage />
@@ -139,7 +141,7 @@ const AddLeague = () => {
           </FormLabel>
           <Select
            onValueChange={field.onChange}
-           defaultValue={field.value}
+           value={field.value}
           >
            <FormControl>
             <SelectTrigger>

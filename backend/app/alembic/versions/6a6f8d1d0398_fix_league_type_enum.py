@@ -18,21 +18,34 @@ depends_on = None
 
 
 def upgrade():
-    # Create the enum type first, then alter the column to use it
+    # Create the enum type first (checkfirst=True makes this idempotent)
     leaguetype = sa.Enum('THREE_V_THREE', 'SIX_V_SIX', name='leaguetype')
-    leaguetype.create(op.get_bind())
+    leaguetype.create(op.get_bind(), checkfirst=True)
     op.alter_column('league', 'league_type',
                existing_type=sa.VARCHAR(length=10),
                type_=leaguetype,
                existing_nullable=False,
-               postgresql_using='league_type::text::leaguetype')
+               postgresql_using=(
+                   "CASE league_type"
+                   " WHEN '3v3' THEN 'THREE_V_THREE'"
+                   " WHEN '6v6' THEN 'SIX_V_SIX'"
+                   " ELSE NULL"
+                   " END::leaguetype"
+               ))
 
 
 def downgrade():
-    # Revert the column back to VARCHAR, then drop the enum type
+    # Revert the column back to VARCHAR mapping labels to original short codes
     op.alter_column('league', 'league_type',
                existing_type=sa.Enum('THREE_V_THREE', 'SIX_V_SIX', name='leaguetype'),
-               type_=sa.VARCHAR(length=10),
+               type_=sa.VARCHAR(length=4),
                existing_nullable=False,
-               postgresql_using='league_type::text')
+               postgresql_using=(
+                   "CASE league_type::text"
+                   " WHEN 'THREE_V_THREE' THEN '3v3'"
+                   " WHEN 'SIX_V_SIX' THEN '6v6'"
+                   " ELSE NULL"
+                   " END"
+               ))
     sa.Enum(name='leaguetype').drop(op.get_bind())
+
