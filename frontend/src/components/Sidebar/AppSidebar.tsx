@@ -23,7 +23,7 @@ export function AppSidebar() {
     ? [
       ...baseItems,
       { icon: Users, title: "Admin", path: "/admin" },
-      { icon: Trophy, title: "Leagues", path: "/leagues" },
+      { icon: Trophy, title: "XBHL", path: "/leagues" },
     ]
     : baseItems
 

@@ -1,11 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect, useParams } from "@tanstack/react-router"
+import { createFileRoute, Link, redirect, useParams } from "@tanstack/react-router"
 import { Suspense } from "react"
+import { ArrowLeft } from "lucide-react"
 
 import { LeaguesService, SeasonsService, UsersService } from "@/client"
 import AddSeason from "@/components/Admin/AddSeason"
 import { seasonColumns } from "@/components/Admin/seasonColumns"
 import { DataTable } from "@/components/Common/DataTable"
+import { Button } from "@/components/ui/button"
 
 function getSeasonsQueryOptions(leagueId: string) {
  return {
@@ -67,6 +69,14 @@ function LeagueDetail() {
 
  return (
   <div className="flex flex-col gap-6">
+   <div>
+    <Button variant="ghost" asChild>
+     <Link to="/leagues">
+      <ArrowLeft className="mr-2" />
+      Back to leagues
+     </Link>
+    </Button>
+   </div>
    <div className="flex items-center justify-between">
     <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>
      <LeagueHeader leagueId={leagueId} />
