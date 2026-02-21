@@ -1,0 +1,406 @@
+REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
+
+## Project Identity
+
+**Project**: XBHL – Xblade Hockey League Platform
+**Purpose**: Manages custom NHL Pro Clubs leagues. Persists all EA match data permanently, builds complete career history, enables long-term analytics and predictions.
+
+**Tech Stack**:
+- Backend: FastAPI (Python 3.12+), SQLModel, PostgreSQL (Supabase), Pydantic v2, Alembic
+- Frontend: React, TypeScript, Vite, TailwindCSS, shadcn/ui, TanStack Router + Query
+- Infra: Deployed online (no Docker locally), Traefik, JWT auth, bcrypt
+- Testing: Pytest + httpx (backend), Playwright (E2E)
+- Scheduler: APScheduler or Celery+Redis (one independent scheduler per League)
+- External: EA Pro Clubs API (club search → clubId; matches by clubId → JSON)
+- Package managers: uv (Python), bun/npm (JavaScript)
+
+**Domain Entities** (dependency order):
+`User` → `League` → `Season` → `Club` → `Player` → `Match`
+`SchedulerConfig` (per League) → `SchedulerRun` (audit)
+Join tables: `PlayerMatchHistory`, `ClubSeasonRelationship`, `PlayerSeasonRelationship`
+
+**Timezone**: All timestamps stored UTC. Business logic and display use `America/New_York` (EST/EDT).
+
+---
+
+## Memory Bank File Structure
+
+```
+.windsurf/
+  core/
+    projectbrief.md       – Project overview and goals
+    productContext.md     – Product requirements and user needs
+    systemPatterns.md     – Architecture and design patterns
+    techContext.md        – Technology stack and dependencies
+    activeContext.md      – Current work focus and state
+    progress.md           – Implementation progress and roadmap
+  plans/
+    [feature]-plan.md
+  task-logs/
+    task-log_YYYY-MM-DD-HH-MM_[descriptor].md
+  errors/
+    error_YYYY-MM-DD_[type].md
+  memory-index.md         – Master index + checksums
+```
+
+**Three-Layer Memory System**:
+1. **Working Memory** — `activeContext.md` — Updated every task
+2. **Short-Term Memory** — `task-logs/` — Updated after each task
+3. **Long-Term Memory** — `core/` (excl. activeContext) — Updated on arch decisions
+
+---
+
+## Workflow Diagrams
+
+### Initialization Workflow
+```mermaid
+flowchart TD
+    Start --> checkMemoryBankExists{checkMemoryBankExists}
+    checkMemoryBankExists -->|No| createMemoryBankDirectory --> scaffoldMemoryBankStructure --> populateMemoryBankFiles --> readMemoryBank
+    checkMemoryBankExists -->|Yes| readMemoryBank
+    readMemoryBank --> verifyFilesComplete{verifyFilesComplete}
+    verifyFilesComplete -->|No| createMissingFiles --> verifyContext
+    verifyFilesComplete -->|Yes| verifyContext --> developStrategy
+```
+
+### Implementation Workflow
+```mermaid
+flowchart TD
+    Start --> executeTask --> checkMemoryBank --> updateDocumentation --> updatePlans --> executeImplementation --> enforceCodeQualityStandards --> executeCreatorPhase --> executeCriticPhase --> executeDefenderPhase --> executeJudgePhase
+```
+
+### Error Recovery Workflow
+```mermaid
+flowchart TD
+    Start --> detectToolFailure --> logFailureDetails --> analyzeFailureCauses --> adjustParameters --> executeRetry --> checkRetrySuccess{checkRetrySuccess}
+    checkRetrySuccess -->|Success| continueTask
+    checkRetrySuccess -->|Failure| incrementRetryCount --> checkRetryLimit{checkRetryLimit}
+    checkRetryLimit -->|Under Limit| executeRetry
+    checkRetryLimit -->|Limit Reached| escalateToUser --> documentFailure --> alertUser
+```
+
+### Evaluation Workflow
+```mermaid
+flowchart TD
+    Start --> documentObjectiveSummary --> calculatePerformanceScore --> evaluateAgainstTargetScore --> checkPerformance{score < target?}
+    checkPerformance -->|Yes| analyzePerformanceGap --> implementOptimizations --> recalculatePerformanceScore --> checkTargetAchieved{targetAchieved?}
+    checkPerformance -->|No| recordSuccessPatterns
+    checkTargetAchieved -->|Yes| recordSuccessPatterns
+    checkTargetAchieved -->|No| implementOptimizations
+    recordSuccessPatterns --> documentLessonsLearned --> updateMemoryBank
+```
+
+### Self-Critique Workflow
+```mermaid
+flowchart TD
+    Start --> executeCreatorPhase --> executeCriticPhase --> executeDefenderPhase --> executeJudgePhase
+```
+
+---
+
+## Event Handlers
+
+<EventHandlers>
+  <Handler event="SessionStart">
+    <Action>Check if `.windsurf/` directory structure exists; scaffold and initialize if missing</Action>
+    <Action>Load all memory layers from `.windsurf/core/`</Action>
+    <Action>Verify memory consistency using checksums in memory-index.md</Action>
+    <Action>Identify current task context from activeContext.md</Action>
+    <Action>Review progress.md to understand completed vs. pending work</Action>
+    <Action>Create a memory of this initialization using CASCADE GENERATED MEMORY for EPHEMERAL MEMORY reminder</Action>
+  </Handler>
+  <Handler event="TaskStart">
+    <Action>Document task objectives in new task log under `.windsurf/task-logs/`</Action>
+    <Action>Develop strict success criteria for task completion</Action>
+    <Action>Check `.windsurf/plans/` for existing feature plan; create or update as needed</Action>
+  </Handler>
+  <Handler event="ErrorDetected">
+    <Action>Document error details in `.windsurf/errors/`</Action>
+    <Action>For EA API failures: apply exponential backoff, never discard buffered data</Action>
+    <Action>For scheduler failures: isolate affected league scheduler, preserve all others</Action>
+    <Action>Check memory for similar errors and apply known resolution patterns</Action>
+  </Handler>
+  <Handler event="TaskComplete">
+    <Action>Document implementation in task log; evaluate performance (target >= 18/23)</Action>
+    <Action>Update all memory layers and activeContext.md with next steps</Action>
+    <Action>If backend models changed: remind the USER to run the Alembic migration themselves (never run it automatically)</Action>
+    <Action>If backend routes changed: remind the USER to regenerate the OpenAPI TypeScript client themselves (never run it automatically)</Action>
+    <Action>Update progress.md with completed items</Action>
+  </Handler>
+  <Handler event="SessionEnd">
+    <Action>Synchronize all memory layers; document session summary in activeContext.md</Action>
+    <Action>Update checksums in memory-index.md</Action>
+    <Action>Note any pending migrations or environment setup steps</Action>
+  </Handler>
+</EventHandlers>
+
+---
+
+## Function Map
+
+<FunctionMap>
+  <StructureFunctions>
+    <Function id="checkMemoryBankExists">Verify if .windsurf/ directory structure exists</Function>
+    <Function id="createMemoryBankDirectory">Create the .windsurf directory structure</Function>
+    <Function id="scaffoldMemoryBankStructure">Create all required subdirectories</Function>
+    <Function id="populateMemoryBankFiles">Initialize core memory files with XBHL project information</Function>
+    <Function id="readMemoryBank">Load all memory layers from .windsurf/core/</Function>
+  </StructureFunctions>
+  <DocumentationFunctions>
+    <Function id="checkDocumentationExists">Verify if documentation exists for current context</Function>
+    <Function id="scaffoldDocumentationStructure">Create documentation structure following unified format</Function>
+    <Function id="generateDocumentation">Create comprehensive documentation for current context</Function>
+    <Function id="selfEvaluateDocumentation">Score documentation quality on 10-point scale</Function>
+    <Function id="reviewDocumentation">Perform critical review on 5-point scale</Function>
+    <Function id="reviseDocumentation">Improve documentation based on review feedback</Function>
+    <Function id="updateMemoryBank">Synchronize all memory layers with new information</Function>
+    <Function id="documentCurrentState">Update activeContext.md with current project state</Function>
+    <Function id="clarifyNextSteps">Document clear next steps in activeContext.md</Function>
+  </DocumentationFunctions>
+  <ImplementationFunctions>
+    <Function id="executeTask">Execute a specific implementation task</Function>
+    <Function id="checkMemoryBank">Review memory bank for relevant context</Function>
+    <Function id="updatePlans">Update .windsurf/plans/ with current implementation details</Function>
+    <Function id="executeImplementation">Execute the actual implementation work</Function>
+    <Function id="enforceCodeQualityStandards">Maintain high code quality per XBHL standards</Function>
+    <Function id="runMigration">Generate and apply Alembic migration after model changes</Function>
+    <Function id="generateFrontendClient">Regenerate OpenAPI TypeScript client after backend route changes</Function>
+  </ImplementationFunctions>
+  <ErrorRecoveryFunctions>
+    <Function id="detectToolFailure">Identify when a tool or process has failed</Function>
+    <Function id="logFailureDetails">Document detailed error information in .windsurf/errors/</Function>
+    <Function id="analyzeFailureCauses">Determine root causes of failure</Function>
+    <Function id="adjustParameters">Modify parameters to address failure causes</Function>
+    <Function id="executeRetry">Attempt the operation again with adjusted parameters</Function>
+    <Function id="escalateToUser">Prepare detailed context for user intervention</Function>
+  </ErrorRecoveryFunctions>
+  <EvaluationFunctions>
+    <Function id="calculatePerformanceScore">Compute numerical score based on performance standards</Function>
+    <Function id="evaluateAgainstTargetScore">Compare actual score against threshold (18/23)</Function>
+    <Function id="implementOptimizations">Apply targeted improvements to solution</Function>
+    <Function id="recordSuccessPatterns">Document successful optimization patterns</Function>
+    <Function id="documentLessonsLearned">Record insights gained during optimization</Function>
+  </EvaluationFunctions>
+  <SelfCritiqueFunctions>
+    <Function id="executeCreatorPhase">Generate comprehensive initial solution</Function>
+    <Function id="executeCriticPhase">Identify weaknesses, edge cases, and assumptions</Function>
+    <Function id="executeDefenderPhase">Address criticisms systematically</Function>
+    <Function id="executeJudgePhase">Compare original and improved versions, select best</Function>
+  </SelfCritiqueFunctions>
+</FunctionMap>
+
+---
+
+## Workflow Definitions
+
+<Workflows>
+  <Workflow id="initialization">
+    <Step function="checkMemoryBankExists"/>
+    <Step function="createMemoryBankDirectory" condition="!memoryBankExists"/>
+    <Step function="scaffoldMemoryBankStructure" condition="!memoryBankExists"/>
+    <Step function="populateMemoryBankFiles" condition="!memoryBankExists"/>
+    <Step function="readMemoryBank"/>
+    <Step function="verifyFilesComplete"/>
+    <Step function="createMissingFiles" condition="!filesComplete"/>
+    <Step function="verifyContext"/>
+    <Step function="developStrategy"/>
+  </Workflow>
+  <Workflow id="implementation">
+    <Step function="executeTask"/>
+    <Step function="checkMemoryBank"/>
+    <Step function="updatePlans"/>
+    <Step function="executeImplementation"/>
+    <Step function="enforceCodeQualityStandards"/>
+    <Step function="executeCreatorPhase"/>
+    <Step function="executeCriticPhase"/>
+    <Step function="executeDefenderPhase"/>
+    <Step function="executeJudgePhase"/>
+  </Workflow>
+  <Workflow id="errorRecovery">
+    <Step function="detectToolFailure"/>
+    <Step function="logFailureDetails"/>
+    <Step function="analyzeFailureCauses"/>
+    <Step function="adjustParameters"/>
+    <Step function="executeRetry"/>
+    <Step function="escalateToUser" condition="retryLimitReached"/>
+  </Workflow>
+  <Workflow id="evaluation">
+    <Step function="calculatePerformanceScore"/>
+    <Step function="evaluateAgainstTargetScore"/>
+    <Step function="implementOptimizations" condition="performanceScore < targetScore"/>
+    <Step function="recordSuccessPatterns" condition="targetAchieved"/>
+    <Step function="documentLessonsLearned"/>
+    <Step function="updateMemoryBank"/>
+  </Workflow>
+  <Workflow id="selfCritique">
+    <Step function="executeCreatorPhase"/>
+    <Step function="executeCriticPhase"/>
+    <Step function="executeDefenderPhase"/>
+    <Step function="executeJudgePhase"/>
+  </Workflow>
+</Workflows>
+
+---
+
+## Core Rules
+
+<Rules>
+  <Rule id="1" description="Memory-First Development">
+    <SubRule id="1a">Begin every session by loading all three memory layers.</SubRule>
+    <SubRule id="1b">Verify memory consistency before starting any task.</SubRule>
+    <SubRule id="1c">Update appropriate memory layers after completing any task.</SubRule>
+  </Rule>
+
+  <Rule id="2" description="Complete Implementation">
+    <SubRule id="2a">Never leave placeholder comments or incomplete implementations.</SubRule>
+    <SubRule id="2b">Deliver fully functional, tested code for every task.</SubRule>
+    <SubRule id="2c">Escalate unresolvable issues to the user with complete context.</SubRule>
+  </Rule>
+
+  <Rule id="3" description="Read Before Edit">
+    <SubRule id="3a">Always read files before modifying them.</SubRule>
+    <SubRule id="3b">Verify understanding of file purpose and structure before changes.</SubRule>
+  </Rule>
+
+  <Rule id="4" description="State Preservation">
+    <SubRule id="4a">Save project state to Memory Bank after every completed task.</SubRule>
+    <SubRule id="4b">Update memory-index.md with new or modified files.</SubRule>
+    <SubRule id="4c">Generate checksums for core memory files to detect inconsistencies.</SubRule>
+  </Rule>
+
+  <Rule id="5" description="Continuous Improvement">
+    <SubRule id="5a">Evaluate performance after each task using the scoring system.</SubRule>
+    <SubRule id="5b">Generate strict criteria during planning phase to validate completion.</SubRule>
+    <SubRule id="5c">Apply learned patterns to future tasks.</SubRule>
+  </Rule>
+
+  <Rule id="6" description="No Implementation Guessing">
+    <SubRule id="6a">Never guess implementations — consult documentation first.</SubRule>
+    <SubRule id="6b">Use Cascade's real-time search to find accurate implementation details.</SubRule>
+    <SubRule id="6c">Document all implementation decisions with references to authoritative sources.</SubRule>
+  </Rule>
+
+  <Rule id="7" description="Dependency Management">
+    <SubRule id="7a">Add dependencies via terminal commands without specifying versions.</SubRule>
+    <SubRule id="7b">Python: Use `uv add package-name`. JavaScript: Use `bun add package-name`.</SubRule>
+    <SubRule id="7c">Document the command used to add each dependency in the task log.</SubRule>
+    <SubRule id="7d">Never manually edit version numbers in package files unless specifically instructed.</SubRule>
+  </Rule>
+
+  <Rule id="8" description="Context Management">
+    <SubRule id="8a">Monitor context utilization during large codebase analysis.</SubRule>
+    <SubRule id="8b">Reload global and workspace rulesets when context reaches 70% capacity.</SubRule>
+    <SubRule id="8c">Document context reloads in the task log to maintain continuity.</SubRule>
+  </Rule>
+
+  <!-- XBHL Domain Rules -->
+
+  <Rule id="9" description="Historical Data Integrity">
+    <SubRule id="9a">Never overwrite or delete existing match data — this is the core product value.</SubRule>
+    <SubRule id="9b">Match deduplication MUST be enforced at DB level via UNIQUE constraint on (match_id, timestamp).</SubRule>
+    <SubRule id="9c">Application-level deduplication is secondary — never a replacement for DB constraints.</SubRule>
+    <SubRule id="9d">Player records must persist even if never registered — link data retroactively on registration.</SubRule>
+  </Rule>
+
+  <Rule id="10" description="Scheduler Isolation">
+    <SubRule id="10a">Each League has exactly one independent scheduler — they must never interfere with each other.</SubRule>
+    <SubRule id="10b">Each scheduler has its own job ID and can be started, stopped, modified independently.</SubRule>
+    <SubRule id="10c">Scheduler crash recovery must not affect other running schedulers.</SubRule>
+    <SubRule id="10d">Every scheduler run must be logged in `scheduler_runs` (status, start, end, match count).</SubRule>
+    <SubRule id="10e">Scheduler must respect: active days, time window (EST), interval, and season date range.</SubRule>
+  </Rule>
+
+  <Rule id="11" description="EA API Integration">
+    <SubRule id="11a">Always handle EA API downtime gracefully — queue retries, never lose buffered data.</SubRule>
+    <SubRule id="11b">Apply exponential backoff on EA API failures.</SubRule>
+    <SubRule id="11c">EA API flow: club name → clubId (search) → private matches JSON (matches by clubId).</SubRule>
+    <SubRule id="11d">Store the full raw match JSON payload; schema refinement is a separate concern.</SubRule>
+    <SubRule id="11e">Log all EA API failures in `.windsurf/errors/` with request details.</SubRule>
+  </Rule>
+
+  <Rule id="12" description="Timezone Enforcement">
+    <SubRule id="12a">All datetimes stored in DB must be UTC with timezone awareness (no naive datetimes).</SubRule>
+    <SubRule id="12b">Business logic time window comparisons must convert to America/New_York before comparing.</SubRule>
+    <SubRule id="12c">Frontend must display all times in EST/EDT with explicit timezone label.</SubRule>
+  </Rule>
+
+  <Rule id="13" description="Service Layer Architecture">
+    <SubRule id="13a">Backend pattern: router (HTTP only) → service (business logic) → repository/crud (DB ops).</SubRule>
+    <SubRule id="13b">No business logic in route handlers.</SubRule>
+    <SubRule id="13c">Use SQLModel ORM methods exclusively — no raw SQL.</SubRule>
+    <SubRule id="13d">All API responses use Public schemas — never expose DB models directly.</SubRule>
+  </Rule>
+
+  <Rule id="14" description="Backend Standards">
+    <SubRule id="14a">Every new SQLModel table requires an Alembic migration — remind the user to run it; never run it automatically.</SubRule>
+    <SubRule id="14b">Use `uuid.UUID` as primary key for all entities (default_factory=uuid.uuid4).</SubRule>
+    <SubRule id="14c">All relationships must specify `back_populates` and correct `ondelete` cascade behavior.</SubRule>
+    <SubRule id="14d">After any route addition or modification, regenerate the OpenAPI TypeScript client.</SubRule>
+  </Rule>
+
+  <Rule id="15" description="Frontend Standards">
+    <SubRule id="15a">Use TanStack Router for all routing — never react-router-dom.</SubRule>
+    <SubRule id="15b">Use auto-generated OpenAPI client from `src/client/` — never hand-write API calls.</SubRule>
+    <SubRule id="15c">All UI components use shadcn/ui and TailwindCSS — maintain dark mode support.</SubRule>
+    <SubRule id="15d">Use TanStack Query for all server state management.</SubRule>
+    <SubRule id="15e">Admin routes and player routes must be separately protected by role-based guards.</SubRule>
+  </Rule>
+
+  <Rule id="17" description="User-Run Commands">
+    <SubRule id="17a">NEVER run Alembic migration commands (alembic revision, alembic upgrade) — the user runs these themselves from backend/.</SubRule>
+    <SubRule id="17b">NEVER run frontend client generation commands (bun run generate-client) — the user runs these themselves.</SubRule>
+    <SubRule id="17c">NEVER run docker compose commands — Docker is not used locally; the project is deployed online.</SubRule>
+    <SubRule id="17d">Backend commands (uv, alembic) are run from the backend/ directory. Always remind the user of the correct CWD.</SubRule>
+    <SubRule id="17e">After backend model/route changes: clearly list for the user exactly which commands to run and from which directory.</SubRule>
+  </Rule>
+
+  <Rule id="16" description="Testing Standards">
+    <SubRule id="16a">Every new backend endpoint requires at least one Pytest test (happy path minimum).</SubRule>
+    <SubRule id="16b">Scheduler logic must be tested with mocked EA API responses.</SubRule>
+    <SubRule id="16c">Critical user flows require Playwright E2E tests (login, register, league creation, match ingestion).</SubRule>
+    <SubRule id="16d">Never delete or weaken existing tests without explicit user instruction.</SubRule>
+  </Rule>
+</Rules>
+
+---
+
+## Performance Standards
+
+Each task is evaluated on a 23-point scale:
+- **Excellent**: 21–23 (≥90%) | **Sufficient**: 18–20 (≥78%) | **Unacceptable**: <18 — requires remediation
+
+### Rewards: +10 elegant solution / +5 parallelization / +3 style idioms / +2 minimal code / +2 edge cases / +1 reusable
+### Penalties: -10 fails core problem / -5 placeholders / -5 inefficient algo / -3 style violations / -2 missed edge cases / -1 overcomplicated / -1 deprecated libs
+
+Any -5 or -10 penalty automatically triggers failure regardless of total score.
+
+---
+
+## Task Log Format
+
+```
+# Task Log: [Brief Description]
+## Task Information
+- Date: YYYY-MM-DD | Time Started: HH:MM | Time Completed: HH:MM
+- Files Modified: [list]
+## Task Details
+- Goal: [What needed to be accomplished]
+- Implementation: [How it was implemented]
+- Challenges: [Any obstacles encountered]
+- Decisions: [Key decisions made]
+## Performance Evaluation
+- Score: [X/23] | Strengths: [...] | Areas for Improvement: [...]
+## Next Steps
+- [Immediate follow-up tasks]
+```
+
+---
+
+## Cascade Memory Integration
+
+- **Workspace Ruleset**: This `.windsurfrules` file — reloaded when context reaches 70%
+- **Memory Bank**: `.windsurf/` — persistent file-based project context (MEMORY BANK)
+- **Cascade Memories**: Auto-generated context persistence (CASCADE GENERATED MEMORY)
+
+Cascade will automatically detect and load `.windsurfrules` at session start and context refresh.
+When context reaches 70%, reload this ruleset and inform the user that ruleset has been reloaded.

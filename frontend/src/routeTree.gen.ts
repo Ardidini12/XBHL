@@ -19,6 +19,7 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutLeaguesRouteImport } from './routes/_layout/leagues'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutLeaguesLeagueIdRouteImport } from './routes/_layout/leagues.$leagueId'
+import { Route as LayoutLeaguesLeagueIdSeasonsSeasonIdRouteImport } from './routes/_layout/leagues.$leagueId.seasons.$seasonId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -69,6 +70,12 @@ const LayoutLeaguesLeagueIdRoute = LayoutLeaguesLeagueIdRouteImport.update({
   path: '/$leagueId',
   getParentRoute: () => LayoutLeaguesRoute,
 } as any)
+const LayoutLeaguesLeagueIdSeasonsSeasonIdRoute =
+  LayoutLeaguesLeagueIdSeasonsSeasonIdRouteImport.update({
+    id: '/seasons/$seasonId',
+    path: '/seasons/$seasonId',
+    getParentRoute: () => LayoutLeaguesLeagueIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -79,7 +86,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRoute
   '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
-  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
+  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRouteWithChildren
+  '/leagues/$leagueId/seasons/$seasonId': typeof LayoutLeaguesLeagueIdSeasonsSeasonIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -90,7 +98,8 @@ export interface FileRoutesByTo {
   '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
-  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
+  '/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRouteWithChildren
+  '/leagues/$leagueId/seasons/$seasonId': typeof LayoutLeaguesLeagueIdSeasonsSeasonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,7 +112,8 @@ export interface FileRoutesById {
   '/_layout/leagues': typeof LayoutLeaguesRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
-  '/_layout/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRoute
+  '/_layout/leagues/$leagueId': typeof LayoutLeaguesLeagueIdRouteWithChildren
+  '/_layout/leagues/$leagueId/seasons/$seasonId': typeof LayoutLeaguesLeagueIdSeasonsSeasonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/leagues'
     | '/settings'
     | '/leagues/$leagueId'
+    | '/leagues/$leagueId/seasons/$seasonId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/'
     | '/leagues/$leagueId'
+    | '/leagues/$leagueId/seasons/$seasonId'
   id:
     | '__root__'
     | '/_layout'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/leagues/$leagueId'
+    | '/_layout/leagues/$leagueId/seasons/$seasonId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,15 +235,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLeaguesLeagueIdRouteImport
       parentRoute: typeof LayoutLeaguesRoute
     }
+    '/_layout/leagues/$leagueId/seasons/$seasonId': {
+      id: '/_layout/leagues/$leagueId/seasons/$seasonId'
+      path: '/seasons/$seasonId'
+      fullPath: '/leagues/$leagueId/seasons/$seasonId'
+      preLoaderRoute: typeof LayoutLeaguesLeagueIdSeasonsSeasonIdRouteImport
+      parentRoute: typeof LayoutLeaguesLeagueIdRoute
+    }
   }
 }
 
+interface LayoutLeaguesLeagueIdRouteChildren {
+  LayoutLeaguesLeagueIdSeasonsSeasonIdRoute: typeof LayoutLeaguesLeagueIdSeasonsSeasonIdRoute
+}
+
+const LayoutLeaguesLeagueIdRouteChildren: LayoutLeaguesLeagueIdRouteChildren = {
+  LayoutLeaguesLeagueIdSeasonsSeasonIdRoute:
+    LayoutLeaguesLeagueIdSeasonsSeasonIdRoute,
+}
+
+const LayoutLeaguesLeagueIdRouteWithChildren =
+  LayoutLeaguesLeagueIdRoute._addFileChildren(
+    LayoutLeaguesLeagueIdRouteChildren,
+  )
+
 interface LayoutLeaguesRouteChildren {
-  LayoutLeaguesLeagueIdRoute: typeof LayoutLeaguesLeagueIdRoute
+  LayoutLeaguesLeagueIdRoute: typeof LayoutLeaguesLeagueIdRouteWithChildren
 }
 
 const LayoutLeaguesRouteChildren: LayoutLeaguesRouteChildren = {
-  LayoutLeaguesLeagueIdRoute: LayoutLeaguesLeagueIdRoute,
+  LayoutLeaguesLeagueIdRoute: LayoutLeaguesLeagueIdRouteWithChildren,
 }
 
 const LayoutLeaguesRouteWithChildren = LayoutLeaguesRoute._addFileChildren(

@@ -5,9 +5,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type LeagueCreate, LeaguesService } from "@/client"
+import { type ClubCreate, ClubsService } from "@/client"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogClose,
@@ -28,31 +27,26 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "League name is required" })
-    .max(255, { message: "League name must be at most 255 characters" }),
-  league_type: z.enum(["3v3", "6v6"] as const, {
-    message: "Please select a league type",
-  }),
-  is_active: z.boolean(),
-  description: z.string().optional(),
+    .min(1, { message: "Club name is required" })
+    .max(255, { message: "Club name must be at most 255 characters" }),
+  ea_id: z.string().max(255).optional().or(z.literal("")),
+  logo_url: z.string().optional().or(z.literal("")),
 })
 
 type FormData = z.infer<typeof formSchema>
 
-const AddLeague = () => {
+interface AddClubProps {
+  leagueId: string
+  seasonId: string
+}
+
+const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -61,34 +55,28 @@ const AddLeague = () => {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
-      name: "",
-      league_type: "3v3",
-      is_active: true,
-      description: "",
-    },
+    defaultValues: { name: "", ea_id: "", logo_url: "" },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: LeagueCreate) =>
-      LeaguesService.createLeague({ requestBody: data }),
+    mutationFn: (data: ClubCreate) =>
+      ClubsService.createClub({ leagueId, seasonId, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("League created successfully")
+      showSuccessToast("Club added successfully")
       form.reset()
       setIsOpen(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["leagues"] })
+      queryClient.invalidateQueries({ queryKey: ["clubs", leagueId, seasonId] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    const payload: LeagueCreate = {
+    const payload: ClubCreate = {
       name: data.name,
-      league_type: data.league_type,
-      is_active: data.is_active,
-      description: data.description ?? null,
+      ea_id: data.ea_id || null,
+      logo_url: data.logo_url || null,
     }
     mutation.mutate(payload)
   }
@@ -98,14 +86,14 @@ const AddLeague = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add League
+          Add Club
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add League</DialogTitle>
+          <DialogTitle>Add Club</DialogTitle>
           <DialogDescription>
-            Fill in the form below to create a new league.
+            Add a new club to this season. EA ID and logo are optional.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -117,49 +105,11 @@ const AddLeague = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      League Name <span className="text-destructive">*</span>
+                      Club Name <span className="text-destructive">*</span>
                     </FormLabel>
-                    <FormControl>
-                      <Input placeholder="League Name" type="text" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="league_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      League Type <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select league type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="3v3">3v3</SelectItem>
-                        <SelectItem value="6v6">6v6</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Optional description"
+                        placeholder="e.g. The Xblades"
                         type="text"
                         {...field}
                       />
@@ -168,24 +118,37 @@ const AddLeague = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="is_active"
+                name="ea_id"
                 render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
+                  <FormItem>
+                    <FormLabel>EA Club ID</FormLabel>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                      <Input placeholder="e.g. 123456" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="logo_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL (.webp)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://example.com/logo.webp"
+                        type="text"
+                        {...field}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
@@ -193,7 +156,7 @@ const AddLeague = () => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Add Club
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -203,4 +166,4 @@ const AddLeague = () => {
   )
 }
 
-export default AddLeague
+export default AddClub

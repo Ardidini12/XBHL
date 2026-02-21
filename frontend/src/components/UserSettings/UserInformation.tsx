@@ -1,9 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
 import { UsersService, type UserUpdateMe } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,12 +16,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
+import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useDebounce } from "@/hooks/useDebounce"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
-import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck"
-import { useDebounce } from "@/hooks/useDebounce"
-import { useEffect } from "react"
 
 const formSchema = z.object({
   full_name: z.string().max(30).optional(),
@@ -40,7 +38,10 @@ const UserInformation = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [editMode, setEditMode] = useState(false)
   const { user: currentUser } = useAuth()
-  const { status: gamertagStatus, checkAvailability: checkGamertagAvailability } = useAvailabilityCheck()
+  const {
+    status: gamertagStatus,
+    checkAvailability: checkGamertagAvailability,
+  } = useAvailabilityCheck()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -58,8 +59,12 @@ const UserInformation = () => {
 
   useEffect(() => {
     // Only check if gamertag has changed and is different from current user's gamertag
-    if (debouncedGamertag && debouncedGamertag.length >= 2 && debouncedGamertag !== currentUser?.gamertag) {
-      checkGamertagAvailability('gamertag', debouncedGamertag)
+    if (
+      debouncedGamertag &&
+      debouncedGamertag.length >= 2 &&
+      debouncedGamertag !== currentUser?.gamertag
+    ) {
+      checkGamertagAvailability("gamertag", debouncedGamertag)
     }
   }, [debouncedGamertag, currentUser?.gamertag, checkGamertagAvailability])
 
@@ -169,21 +174,26 @@ const UserInformation = () => {
                   <FormControl>
                     <div className="relative">
                       <Input type="text" {...field} />
-                      {gamertagStatus === 'loading' && field.value !== currentUser?.gamertag && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          Checking...
-                        </span>
-                      )}
-                      {gamertagStatus === 'available' && field.value.length >= 2 && field.value !== currentUser?.gamertag && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
-                          ✓ Available
-                        </span>
-                      )}
-                      {gamertagStatus === 'unavailable' && field.value.length >= 2 && field.value !== currentUser?.gamertag && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
-                          ✗ Taken
-                        </span>
-                      )}
+                      {gamertagStatus === "loading" &&
+                        field.value !== currentUser?.gamertag && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            Checking...
+                          </span>
+                        )}
+                      {gamertagStatus === "available" &&
+                        field.value.length >= 2 &&
+                        field.value !== currentUser?.gamertag && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                            ✓ Available
+                          </span>
+                        )}
+                      {gamertagStatus === "unavailable" &&
+                        field.value.length >= 2 &&
+                        field.value !== currentUser?.gamertag && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                            ✗ Taken
+                          </span>
+                        )}
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -191,7 +201,9 @@ const UserInformation = () => {
               ) : (
                 <FormItem>
                   <FormLabel>Gamertag</FormLabel>
-                  <p className="py-2 truncate max-w-sm">{field.value || "N/A"}</p>
+                  <p className="py-2 truncate max-w-sm">
+                    {field.value || "N/A"}
+                  </p>
                 </FormItem>
               )
             }

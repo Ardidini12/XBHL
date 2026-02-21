@@ -332,3 +332,66 @@ export type SeasonsDeleteSeasonData = {
 };
 
 export type SeasonsDeleteSeasonResponse = Message;
+
+// Club types
+export type ClubCreate = {
+    name: string;
+    ea_id?: (string | null);
+    logo_url?: (string | null);
+};
+
+export type ClubPublic = {
+    name: string;
+    ea_id?: (string | null);
+    logo_url?: (string | null);
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    season_count: number;
+};
+
+export type ClubsPublic = {
+    data: Array<ClubPublic>;
+    count: number;
+};
+
+export type ClubUpdate = {
+    name?: (string | null);
+    ea_id?: (string | null);
+    logo_url?: (string | null);
+};
+
+// Club request/response types
+export type ClubsReadClubsData = {
+    leagueId: string;
+    seasonId: string;
+    skip?: number;
+    limit?: number;
+};
+
+export type ClubsReadClubsResponse = ClubsPublic;
+
+export type ClubsCreateClubData = {
+    leagueId: string;
+    seasonId: string;
+    requestBody: ClubCreate;
+};
+
+export type ClubsCreateClubResponse = ClubPublic;
+
+export type ClubsUpdateClubData = {
+    leagueId: string;
+    seasonId: string;
+    clubId: string;
+    requestBody: ClubUpdate;
+};
+
+export type ClubsUpdateClubResponse = ClubPublic;
+
+export type ClubsDeleteClubData = {
+    leagueId: string;
+    seasonId: string;
+    clubId: string;
+};
+
+export type ClubsDeleteClubResponse = Message;

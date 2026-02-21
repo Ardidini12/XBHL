@@ -150,6 +150,7 @@ class Season(SeasonBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     league: League = Relationship(back_populates="seasons")
+    club_links: list["ClubSeasonRelationship"] = Relationship(back_populates="season")
 
 class SeasonPublic(SeasonBase):
     id: uuid.UUID
@@ -161,6 +162,59 @@ class SeasonPublic(SeasonBase):
 class SeasonsPublic(SQLModel):
     data: list[SeasonPublic]
     count: int
+
+
+# Club Model
+
+class ClubBase(SQLModel):
+    name: str = Field(max_length=255)
+    ea_id: str | None = Field(default=None, max_length=255)
+    logo_url: str | None = Field(default=None)
+
+class ClubCreate(ClubBase):
+    pass
+
+class ClubUpdate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    ea_id: str | None = Field(default=None, max_length=255)
+    logo_url: str | None = Field(default=None)
+
+class Club(ClubBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    season_links: list["ClubSeasonRelationship"] = Relationship(back_populates="club")
+
+class ClubPublic(ClubBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    season_count: int = 0
+
+class ClubsPublic(SQLModel):
+    data: list[ClubPublic]
+    count: int
+
+
+# Club–Season join table
+
+class ClubSeasonRelationship(SQLModel, table=True):
+    __tablename__ = "club_season"  # type: ignore
+    club_id: uuid.UUID = Field(
+        foreign_key="club.id", primary_key=True, ondelete="CASCADE"
+    )
+    season_id: uuid.UUID = Field(
+        foreign_key="season.id", primary_key=True, ondelete="CASCADE"
+    )
+    club: Club = Relationship(back_populates="season_links")
+    season: Season = Relationship(back_populates="club_links")
+
 
 # Generic message
 class Message(SQLModel):

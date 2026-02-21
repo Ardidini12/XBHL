@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersCheckAvailabilityData, UsersCheckAvailabilityResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueByIdData, LeaguesReadLeagueByIdResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsGetSeasonData, SeasonsGetSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse } from './types.gen';
+import type { LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersCheckAvailabilityData, UsersCheckAvailabilityResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueByIdData, LeaguesReadLeagueByIdResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsGetSeasonData, SeasonsGetSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse } from './types.gen';
 
 export class LoginService {
     /**
@@ -600,6 +600,90 @@ export class SeasonsService {
             path: {
                 league_id: data.leagueId,
                 season_id: data.seasonId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class ClubsService {
+    /**
+     * Read Clubs
+     * List all clubs in a season.
+     */
+    public static readClubs(data: ClubsReadClubsData): CancelablePromise<ClubsReadClubsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/',
+            path: {
+                league_id: data.leagueId,
+                season_id: data.seasonId
+            },
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Create Club
+     * Create a new club and add it to the season.
+     */
+    public static createClub(data: ClubsCreateClubData): CancelablePromise<ClubsCreateClubResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/',
+            path: {
+                league_id: data.leagueId,
+                season_id: data.seasonId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Update Club
+     * Update a club's name, EA ID, or logo URL.
+     */
+    public static updateClub(data: ClubsUpdateClubData): CancelablePromise<ClubsUpdateClubResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/{club_id}',
+            path: {
+                league_id: data.leagueId,
+                season_id: data.seasonId,
+                club_id: data.clubId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+
+    /**
+     * Delete Club
+     * Remove a club from this season.
+     */
+    public static deleteClub(data: ClubsDeleteClubData): CancelablePromise<ClubsDeleteClubResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/{club_id}',
+            path: {
+                league_id: data.leagueId,
+                season_id: data.seasonId,
+                club_id: data.clubId
             },
             errors: {
                 422: 'Validation Error'

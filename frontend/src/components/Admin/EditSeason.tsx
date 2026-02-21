@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type SeasonCreate, SeasonsService } from "@/client"
+import { SeasonsService, type SeasonUpdate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -39,12 +36,13 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-interface AddSeasonProps {
-  leagueId: string
+interface EditSeasonProps {
+  season: { id: string; league_id: string; name: string }
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const AddSeason = ({ leagueId }: AddSeasonProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -53,46 +51,38 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      name: "",
+      name: season.name,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: SeasonCreate) =>
-      SeasonsService.createSeason({ leagueId, requestBody: data }),
+    mutationFn: (data: SeasonUpdate) =>
+      SeasonsService.updateSeason({
+        leagueId: season.league_id,
+        seasonId: season.id,
+        requestBody: data,
+      }),
     onSuccess: () => {
-      showSuccessToast("Season created successfully")
-      form.reset()
-      setIsOpen(false)
+      showSuccessToast("Season updated successfully")
+      onOpenChange(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["seasons", leagueId] })
+      queryClient.invalidateQueries({ queryKey: ["seasons", season.league_id] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    const payload: SeasonCreate = {
-      name: data.name,
-      league_id: leagueId,
-    }
-    mutation.mutate(payload)
+    mutation.mutate({ name: data.name })
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="my-4">
-          <Plus className="mr-2" />
-          Create Season
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Season</DialogTitle>
+          <DialogTitle>Edit Season</DialogTitle>
           <DialogDescription>
-            Enter a name for the new season. The start date will be set
-            automatically.
+            Update the name for <strong>{season.name}</strong>.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -118,7 +108,6 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
                 )}
               />
             </div>
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
@@ -126,7 +115,7 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Create
+                Save
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -136,4 +125,4 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
   )
 }
 
-export default AddSeason
+export default EditSeason
