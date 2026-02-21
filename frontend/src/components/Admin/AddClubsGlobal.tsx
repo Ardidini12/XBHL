@@ -28,7 +28,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { handleError } from "@/utils"
 
 const clubRowSchema = z.object({
   name: z
@@ -70,22 +69,33 @@ const AddClubsGlobal = () => {
 
   const mutation = useMutation({
     mutationFn: async (clubs: ClubCreate[]) => {
-      const results = []
-      for (const club of clubs) {
-        results.push(
-          await GlobalClubsService.createClub({ requestBody: club }),
+      const settled = await Promise.allSettled(
+        clubs.map((club) => GlobalClubsService.createClub({ requestBody: club })),
+      )
+      const successes = settled
+        .map((r, i) => (r.status === "fulfilled" ? clubs[i].name : null))
+        .filter(Boolean) as string[]
+      const failures = settled
+        .map((r, i) => (r.status === "rejected" ? clubs[i].name : null))
+        .filter(Boolean) as string[]
+      return { successes, failures }
+    },
+    onSuccess: ({ successes, failures }) => {
+      if (successes.length > 0) {
+        showSuccessToast(
+          `${successes.length} club${successes.length > 1 ? "s" : ""} added successfully`,
         )
       }
-      return results
+      if (failures.length > 0) {
+        showErrorToast(
+          `${failures.length} club${failures.length > 1 ? "s" : ""} failed: ${failures.join(", ")}`,
+        )
+      }
+      if (failures.length === 0) {
+        form.reset({ clubs: [emptyRow] })
+        setIsOpen(false)
+      }
     },
-    onSuccess: (results) => {
-      showSuccessToast(
-        `${results.length} club${results.length > 1 ? "s" : ""} added successfully`,
-      )
-      form.reset({ clubs: [emptyRow] })
-      setIsOpen(false)
-    },
-    onError: handleError.bind(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["clubs-global"] })
     },

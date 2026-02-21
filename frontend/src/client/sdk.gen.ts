@@ -519,7 +519,7 @@ export class ClubsService {
             method: 'POST',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/assign/{club_id}',
             path: { league_id: data.leagueId, season_id: data.seasonId, club_id: data.clubId },
-            errors: { 422: 'Validation Error' }
+            errors: { 409: 'Conflict', 422: 'Validation Error' }
         });
     }
 
@@ -599,7 +599,7 @@ export class GlobalClubsService {
             url: '/api/v1/clubs/{club_id}/assign',
             path: { club_id: data.clubId },
             query: { season_id: data.seasonId },
-            errors: { 422: 'Validation Error' }
+            errors: { 409: 'Conflict', 422: 'Validation Error' }
         });
     }
 }

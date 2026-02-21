@@ -80,18 +80,7 @@ def create_club_in_season(
         )
     club = crud.create_club(session=session, club_create=club_in)
     crud.add_club_to_season(session=session, club_id=club.id, season_id=season.id)
-    season_count = crud._get_season_count(session=session, club_id=club.id)
-    history = crud.get_club_season_history(session=session, club_id=club.id)
-    return ClubPublic(
-        id=club.id,
-        name=club.name,
-        ea_id=club.ea_id,
-        logo_url=club.logo_url,
-        created_at=club.created_at,
-        updated_at=club.updated_at,
-        season_count=season_count,
-        history=history,
-    )
+    return crud.build_club_public(session=session, club=club)
 
 
 @router.post(
@@ -115,18 +104,7 @@ def assign_existing_club_to_season(
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
     crud.add_club_to_season(session=session, club_id=club.id, season_id=season.id)
-    season_count = crud._get_season_count(session=session, club_id=club.id)
-    history = crud.get_club_season_history(session=session, club_id=club.id)
-    return ClubPublic(
-        id=club.id,
-        name=club.name,
-        ea_id=club.ea_id,
-        logo_url=club.logo_url,
-        created_at=club.created_at,
-        updated_at=club.updated_at,
-        season_count=season_count,
-        history=history,
-    )
+    return crud.build_club_public(session=session, club=club)
 
 
 @router.get(
@@ -170,26 +148,18 @@ def update_club(
     get_league_or_404(league_id=league_id, session=session)
     get_season_or_404(season_id=season_id, league_id=league_id, session=session)
     db_club = get_club_in_season_or_404(club_id=club_id, season_id=season_id, session=session)
-    if club_in.name and club_in.name != db_club.name:
-        conflict = crud.get_club_by_name(session=session, name=club_in.name)
-        if conflict:
-            raise HTTPException(
-                status_code=409,
-                detail=f"A club named '{club_in.name}' already exists.",
-            )
+    if club_in.name is not None:
+        if club_in.name == "":
+            raise HTTPException(status_code=400, detail="Club name cannot be empty.")
+        if club_in.name != db_club.name:
+            conflict = crud.get_club_by_name(session=session, name=club_in.name)
+            if conflict:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"A club named '{club_in.name}' already exists.",
+                )
     updated = crud.update_club(session=session, db_club=db_club, club_in=club_in)
-    season_count = crud._get_season_count(session=session, club_id=updated.id)
-    history = crud.get_club_season_history(session=session, club_id=updated.id)
-    return ClubPublic(
-        id=updated.id,
-        name=updated.name,
-        ea_id=updated.ea_id,
-        logo_url=updated.logo_url,
-        created_at=updated.created_at,
-        updated_at=updated.updated_at,
-        season_count=season_count,
-        history=history,
-    )
+    return crud.build_club_public(session=session, club=updated)
 
 
 @router.delete(

@@ -84,6 +84,7 @@ const AddFromExisting = ({ leagueId, seasonId }: AddFromExistingProps) => {
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["clubs", leagueId, seasonId] })
+      queryClient.invalidateQueries({ queryKey: ["clubs-global"] })
     },
   })
 
