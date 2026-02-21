@@ -43,13 +43,13 @@ export const clubColumnsGlobal: ColumnDef<ClubPublic>[] = [
     id: "current_seasons",
     header: "Active Seasons",
     cell: ({ row }) => {
-      const history = row.original.history ?? []
-      if (history.length === 0) {
-        return <span className="text-muted-foreground text-sm italic">Unassigned</span>
+      const active = (row.original.history ?? []).filter((h) => h.is_active)
+      if (active.length === 0) {
+        return <span className="text-muted-foreground text-sm italic">None</span>
       }
       return (
         <div className="flex flex-wrap gap-1">
-          {history.map((h) => (
+          {active.map((h) => (
             <Badge key={`${h.league_id}-${h.season_id}`} variant="secondary" className="text-xs">
               {h.league_name} — {h.season_name}
             </Badge>
@@ -59,11 +59,31 @@ export const clubColumnsGlobal: ColumnDef<ClubPublic>[] = [
     },
   },
   {
-    accessorKey: "season_count",
-    header: "Total Seasons",
-    cell: ({ row }) => (
-      <Badge variant="outline">{row.original.season_count}</Badge>
-    ),
+    id: "season_history",
+    header: "Season History",
+    cell: ({ row }) => {
+      const history = row.original.history ?? []
+      if (history.length === 0) {
+        return <span className="text-muted-foreground text-sm italic">Unassigned</span>
+      }
+      return (
+        <div className="flex flex-col gap-1">
+          {history.map((h) => (
+            <div key={`${h.league_id}-${h.season_id}`} className="flex items-center gap-1.5">
+              <Badge
+                variant={h.is_active ? "default" : "outline"}
+                className="text-xs shrink-0"
+              >
+                {h.is_active ? "Active" : "Ended"}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {h.league_name} — {h.season_name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )
+    },
   },
   {
     id: "actions",

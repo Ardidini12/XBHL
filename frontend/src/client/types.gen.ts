@@ -339,6 +339,9 @@ export type ClubSeasonHistory = {
     season_name: string;
     league_id: string;
     league_name: string;
+    is_active: boolean;
+    start_date?: (string | null);
+    end_date?: (string | null);
 };
 
 export type ClubCreate = {

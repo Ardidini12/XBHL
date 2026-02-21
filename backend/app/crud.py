@@ -271,6 +271,9 @@ def _build_history(*, session: Session, club_id: uuid.UUID) -> list[ClubSeasonHi
                     season_name=season.name,
                     league_id=str(season.league_id),
                     league_name=league.name if league else "Unknown",
+                    is_active=season.end_date is None,
+                    start_date=season.start_date,
+                    end_date=season.end_date,
                 )
             )
     return history

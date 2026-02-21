@@ -171,6 +171,9 @@ class ClubSeasonHistory(SQLModel):
     season_name: str
     league_id: str
     league_name: str
+    is_active: bool = True
+    start_date: datetime | None = None
+    end_date: datetime | None = None
 
 
 class ClubBase(SQLModel):
