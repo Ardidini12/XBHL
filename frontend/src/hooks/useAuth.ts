@@ -49,12 +49,14 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      queryClient.clear()
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
   })
 
   const logout = () => {
+    queryClient.clear()
     localStorage.removeItem("access_token")
     navigate({ to: "/login" })
   }

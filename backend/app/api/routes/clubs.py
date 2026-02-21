@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import select
 
 from app import crud
 from app.api.deps import SessionDep, get_current_active_superuser
@@ -10,6 +11,7 @@ from app.models import (
     ClubCreate,
     ClubPublic,
     ClubsPublic,
+    ClubSeasonRelationship,
     ClubUpdate,
     League,
     Message,
@@ -42,8 +44,6 @@ def get_club_in_season_or_404(
     club = crud.get_club_by_id(session=session, club_id=club_id)
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
-    from sqlmodel import select
-    from app.models import ClubSeasonRelationship
     link = session.exec(
         select(ClubSeasonRelationship)
         .where(ClubSeasonRelationship.club_id == club_id)
@@ -67,11 +67,13 @@ def create_club_in_season(
     club_in: ClubCreate,
 ) -> Any:
     """
-    Create a new club and add it to the season.
+    Create a new club (or reuse an existing one by name) and add it to the season.
     """
     get_league_or_404(league_id=league_id, session=session)
     season = get_season_or_404(season_id=season_id, league_id=league_id, session=session)
-    club = crud.create_club(session=session, club_create=club_in)
+    club = crud.get_club_by_name(session=session, name=club_in.name)
+    if club is None:
+        club = crud.create_club(session=session, club_create=club_in)
     crud.add_club_to_season(session=session, club_id=club.id, season_id=season.id)
     season_count = crud._get_season_count(session=session, club_id=club.id)
     return ClubPublic(
@@ -97,7 +99,7 @@ def read_clubs_in_season(
     limit: int = 100,
 ) -> Any:
     """
-    List all clubs in a season.
+    List all clubs in a season. Intentionally public — no auth required.
     """
     get_league_or_404(league_id=league_id, session=session)
     get_season_or_404(season_id=season_id, league_id=league_id, session=session)

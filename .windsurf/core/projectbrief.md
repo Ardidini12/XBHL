@@ -28,7 +28,7 @@ XBHL is a platform that manages custom NHL Pro Clubs leagues on top of EA's Pro 
 - System enforces EST timezone globally
 
 ## Repository
-- Root: `c:\Users\HP\Desktop\XBHL`
+- Root: `{PROJECT_ROOT}`
 - Backend: `backend/` (FastAPI + SQLModel)
 - Frontend: `frontend/` (React + Vite + TanStack)
 - Infra: Docker Compose (`compose.yml`, `compose.override.yml`, `compose.traefik.yml`)

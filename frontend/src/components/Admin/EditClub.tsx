@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -30,10 +31,10 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Club name is required" })
-    .max(255, { message: "Club name must be at most 255 characters" }),
+    .min(1, { error: "Club name is required" })
+    .max(255, { error: "Club name must be at most 255 characters" }),
   ea_id: z.string().max(255).optional().or(z.literal("")),
-  logo_url: z.string().optional().or(z.literal("")),
+  logo_url: z.string().url({ error: "Must be a valid URL" }).optional().or(z.literal("")),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -71,6 +72,16 @@ const EditClub = ({
       logo_url: club.logo_url ?? "",
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: club.name,
+        ea_id: club.ea_id ?? "",
+        logo_url: club.logo_url ?? "",
+      })
+    }
+  }, [open, club, form])
 
   const mutation = useMutation({
     mutationFn: (data: ClubUpdate) =>

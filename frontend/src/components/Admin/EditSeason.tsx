@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -30,8 +31,8 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Season name is required" })
-    .max(255, { message: "Season name must be at most 255 characters" }),
+    .min(1, { error: "Season name is required" })
+    .max(255, { error: "Season name must be at most 255 characters" }),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -54,6 +55,12 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
       name: season.name,
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      form.reset({ name: season.name })
+    }
+  }, [open, season, form])
 
   const mutation = useMutation({
     mutationFn: (data: SeasonUpdate) =>

@@ -40,7 +40,7 @@ backend/app/
       login.py
     deps.py          – FastAPI dependencies (auth, db session)
     main.py          – APIRouter aggregation
-  services/          – Business logic layer (TO BE CREATED)
+  services/          – Business logic layer (planned, not yet implemented)
     league_service.py
     season_service.py
     club_service.py

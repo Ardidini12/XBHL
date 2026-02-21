@@ -64,11 +64,9 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
       showSuccessToast("Season created successfully")
       form.reset()
       setIsOpen(false)
-    },
-    onError: handleError.bind(showErrorToast),
-    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["seasons", leagueId] })
     },
+    onError: handleError.bind(showErrorToast),
   })
 
   const onSubmit = (data: FormData) => {

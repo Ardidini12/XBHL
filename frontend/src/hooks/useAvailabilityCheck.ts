@@ -42,10 +42,17 @@ export function useAvailabilityCheck(): UseAvailabilityCheckResult {
         } else {
           setStatus("unavailable")
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Availability check failed", error)
         setStatus("error")
-        setErrorMessage(error.body?.detail || "Error checking availability")
+        const message =
+          typeof error === "object" &&
+          error !== null &&
+          "body" in error &&
+          typeof (error as { body?: { detail?: unknown } }).body?.detail === "string"
+            ? (error as { body: { detail: string } }).body.detail
+            : "Error checking availability"
+        setErrorMessage(message)
       }
     },
     [],
