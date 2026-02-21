@@ -4,6 +4,7 @@ import {
   Link as RouterLink,
   redirect,
 } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthLayout } from "@/components/Common/AuthLayout"
@@ -21,7 +22,6 @@ import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck"
 import { useDebounce } from "@/hooks/useDebounce"
-import { useEffect } from "react"
 
 const formSchema = z
   .object({
@@ -66,8 +66,12 @@ export const Route = createFileRoute("/signup")({
 
 function SignUp() {
   const { signUpMutation } = useAuth()
-  const { status: gamertagStatus, checkAvailability: checkGamertagAvailability } = useAvailabilityCheck()
-  const { status: emailStatus, checkAvailability: checkEmailAvailability } = useAvailabilityCheck()
+  const {
+    status: gamertagStatus,
+    checkAvailability: checkGamertagAvailability,
+  } = useAvailabilityCheck()
+  const { status: emailStatus, checkAvailability: checkEmailAvailability } =
+    useAvailabilityCheck()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -89,12 +93,17 @@ function SignUp() {
 
   useEffect(() => {
     if (debouncedGamertag && debouncedGamertag.length >= 2) {
-      checkGamertagAvailability('gamertag', debouncedGamertag)
+      checkGamertagAvailability("gamertag", debouncedGamertag)
     }
     if (debouncedEmail && debouncedEmail.length >= 2) {
-      checkEmailAvailability('email', debouncedEmail)
+      checkEmailAvailability("email", debouncedEmail)
     }
-  }, [debouncedGamertag, checkGamertagAvailability, debouncedEmail, checkEmailAvailability])
+  }, [
+    debouncedGamertag,
+    checkGamertagAvailability,
+    debouncedEmail,
+    checkEmailAvailability,
+  ])
 
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
@@ -143,30 +152,32 @@ function SignUp() {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <div className="relative">
-                    <Input
-                      data-testid="email-input"
-                      placeholder="user@example.com"
-                      type="email"
-                      {...field}
-                    />
-                    {emailStatus === 'loading' && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                        Checking...
-                      </span>
-                    )}
-                    {emailStatus === 'available' && field.value.length >= 2 && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
-                        ✓ Available
-                      </span>
-                    )}
-                    {emailStatus === 'unavailable' && field.value.length >= 2 && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
-                        ✗ Taken
-                      </span>
-                    )}
+                      <Input
+                        data-testid="email-input"
+                        placeholder="user@example.com"
+                        type="email"
+                        {...field}
+                      />
+                      {emailStatus === "loading" && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          Checking...
+                        </span>
+                      )}
+                      {emailStatus === "available" &&
+                        field.value.length >= 2 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                            ✓ Available
+                          </span>
+                        )}
+                      {emailStatus === "unavailable" &&
+                        field.value.length >= 2 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                            ✗ Taken
+                          </span>
+                        )}
                     </div>
                   </FormControl>
-                  <FormMessage /> 
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -185,21 +196,23 @@ function SignUp() {
                         type="text"
                         {...field}
                       />
-                      {gamertagStatus === 'loading' && (
+                      {gamertagStatus === "loading" && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                           Checking...
                         </span>
                       )}
-                      {gamertagStatus === 'available' && field.value.length >= 2 && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
-                          ✓ Available
-                        </span>
-                      )}
-                      {gamertagStatus === 'unavailable' && field.value.length >= 2 && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
-                          ✗ Taken
-                        </span>
-                      )}
+                      {gamertagStatus === "available" &&
+                        field.value.length >= 2 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600">
+                            ✓ Available
+                          </span>
+                        )}
+                      {gamertagStatus === "unavailable" &&
+                        field.value.length >= 2 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                            ✗ Taken
+                          </span>
+                        )}
                     </div>
                   </FormControl>
                   <FormMessage />

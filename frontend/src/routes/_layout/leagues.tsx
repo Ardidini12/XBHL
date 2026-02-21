@@ -49,7 +49,9 @@ function LeaguesTableContent() {
 
 function LeaguesTable() {
   return (
-    <Suspense fallback={<div className="text-muted-foreground">Loading leagues...</div>}>
+    <Suspense
+      fallback={<div className="text-muted-foreground">Loading leagues...</div>}
+    >
       <LeaguesTableContent />
     </Suspense>
   )

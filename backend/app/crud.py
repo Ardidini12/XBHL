@@ -9,6 +9,8 @@ from app.models import (
     User, UserCreate, UserUpdate,
     League, LeagueCreate, LeagueUpdate,
     Season, SeasonCreate, SeasonUpdate,
+    Club, ClubCreate, ClubUpdate, ClubPublic,
+    ClubSeasonRelationship,
 )
 
 
@@ -142,3 +144,94 @@ def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdat
     session.commit()
     session.refresh(db_season)
     return db_season
+
+
+# Club CRUD
+
+def create_club(*, session: Session, club_create: ClubCreate) -> Club:
+    db_obj = Club.model_validate(club_create)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def get_club_by_id(*, session: Session, club_id: uuid.UUID) -> Club | None:
+    return session.get(Club, club_id)
+
+
+def _get_season_count(*, session: Session, club_id: uuid.UUID) -> int:
+    return session.exec(
+        select(func.count())
+        .select_from(ClubSeasonRelationship)
+        .where(ClubSeasonRelationship.club_id == club_id)
+    ).one()
+
+
+def get_clubs_by_season(
+    *, session: Session, season_id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> tuple[list[ClubPublic], int]:
+    count = session.exec(
+        select(func.count())
+        .select_from(ClubSeasonRelationship)
+        .where(ClubSeasonRelationship.season_id == season_id)
+    ).one()
+    links = session.exec(
+        select(ClubSeasonRelationship)
+        .where(ClubSeasonRelationship.season_id == season_id)
+        .offset(skip)
+        .limit(limit)
+    ).all()
+    result: list[ClubPublic] = []
+    for link in links:
+        club = session.get(Club, link.club_id)
+        if club:
+            sc = _get_season_count(session=session, club_id=club.id)
+            result.append(
+                ClubPublic(
+                    id=club.id,
+                    name=club.name,
+                    ea_id=club.ea_id,
+                    logo_url=club.logo_url,
+                    created_at=club.created_at,
+                    updated_at=club.updated_at,
+                    season_count=sc,
+                )
+            )
+    return result, count
+
+
+def add_club_to_season(
+    *, session: Session, club_id: uuid.UUID, season_id: uuid.UUID
+) -> None:
+    link = ClubSeasonRelationship(club_id=club_id, season_id=season_id)
+    session.add(link)
+    session.commit()
+
+
+def remove_club_from_season(
+    *, session: Session, club_id: uuid.UUID, season_id: uuid.UUID
+) -> None:
+    link = session.exec(
+        select(ClubSeasonRelationship)
+        .where(ClubSeasonRelationship.club_id == club_id)
+        .where(ClubSeasonRelationship.season_id == season_id)
+    ).first()
+    if link:
+        session.delete(link)
+        session.commit()
+
+
+def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Club:
+    club_data = club_in.model_dump(exclude_unset=True)
+    db_club.sqlmodel_update(club_data)
+    db_club.updated_at = datetime.now(timezone.utc)
+    session.add(db_club)
+    session.commit()
+    session.refresh(db_club)
+    return db_club
+
+
+def delete_club(*, session: Session, db_club: Club) -> None:
+    session.delete(db_club)
+    session.commit()

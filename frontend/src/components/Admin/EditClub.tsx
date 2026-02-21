@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type SeasonCreate, SeasonsService } from "@/client"
+import { ClubsService, type ClubUpdate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -33,18 +30,34 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Season name is required" })
-    .max(255, { message: "Season name must be at most 255 characters" }),
+    .min(1, { message: "Club name is required" })
+    .max(255, { message: "Club name must be at most 255 characters" }),
+  ea_id: z.string().max(255).optional().or(z.literal("")),
+  logo_url: z.string().optional().or(z.literal("")),
 })
 
 type FormData = z.infer<typeof formSchema>
 
-interface AddSeasonProps {
+interface EditClubProps {
+  club: {
+    id: string
+    name: string
+    ea_id?: string | null
+    logo_url?: string | null
+  }
   leagueId: string
+  seasonId: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const AddSeason = ({ leagueId }: AddSeasonProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+const EditClub = ({
+  club,
+  leagueId,
+  seasonId,
+  open,
+  onOpenChange,
+}: EditClubProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -53,46 +66,45 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      name: "",
+      name: club.name,
+      ea_id: club.ea_id ?? "",
+      logo_url: club.logo_url ?? "",
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: SeasonCreate) =>
-      SeasonsService.createSeason({ leagueId, requestBody: data }),
+    mutationFn: (data: ClubUpdate) =>
+      ClubsService.updateClub({
+        leagueId,
+        seasonId,
+        clubId: club.id,
+        requestBody: data,
+      }),
     onSuccess: () => {
-      showSuccessToast("Season created successfully")
-      form.reset()
-      setIsOpen(false)
+      showSuccessToast("Club updated successfully")
+      onOpenChange(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["seasons", leagueId] })
+      queryClient.invalidateQueries({ queryKey: ["clubs", leagueId, seasonId] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    const payload: SeasonCreate = {
+    mutation.mutate({
       name: data.name,
-      league_id: leagueId,
-    }
-    mutation.mutate(payload)
+      ea_id: data.ea_id || null,
+      logo_url: data.logo_url || null,
+    })
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="my-4">
-          <Plus className="mr-2" />
-          Create Season
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Season</DialogTitle>
+          <DialogTitle>Edit Club</DialogTitle>
           <DialogDescription>
-            Enter a name for the new season. The start date will be set
-            automatically.
+            Update info for <strong>{club.name}</strong>.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -104,11 +116,37 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Season Name <span className="text-destructive">*</span>
+                      Club Name <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
+                      <Input type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ea_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>EA Club ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 123456" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="logo_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL (.webp)</FormLabel>
+                    <FormControl>
                       <Input
-                        placeholder="e.g. Season 1"
+                        placeholder="https://example.com/logo.webp"
                         type="text"
                         {...field}
                       />
@@ -118,7 +156,6 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
                 )}
               />
             </div>
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
@@ -126,7 +163,7 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Create
+                Save
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -136,4 +173,4 @@ const AddSeason = ({ leagueId }: AddSeasonProps) => {
   )
 }
 
-export default AddSeason
+export default EditClub
