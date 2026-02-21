@@ -42,6 +42,7 @@ export const ClubActionsMenuGlobal = ({ club }: ClubActionsMenuGlobalProps) => {
       showSuccessToast("Club deleted from platform")
       setShowDeleteDialog(false)
       queryClient.invalidateQueries({ queryKey: ["clubs-global"] })
+      queryClient.invalidateQueries({ queryKey: ["clubs"] })
     },
     onError: handleError.bind(showErrorToast),
   })
