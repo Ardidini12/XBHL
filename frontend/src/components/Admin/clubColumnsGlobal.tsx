@@ -59,33 +59,6 @@ export const clubColumnsGlobal: ColumnDef<ClubPublic>[] = [
     },
   },
   {
-    id: "season_history",
-    header: "Season History",
-    cell: ({ row }) => {
-      const history = row.original.history ?? []
-      if (history.length === 0) {
-        return <span className="text-muted-foreground text-sm italic">Unassigned</span>
-      }
-      return (
-        <div className="flex flex-col gap-1">
-          {history.map((h) => (
-            <div key={`${h.league_id}-${h.season_id}`} className="flex items-center gap-1.5">
-              <Badge
-                variant={h.is_active ? "default" : "outline"}
-                className="text-xs shrink-0"
-              >
-                {h.is_active ? "Active" : "Ended"}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {h.league_name} — {h.season_name}
-              </span>
-            </div>
-          ))}
-        </div>
-      )
-    },
-  },
-  {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => (

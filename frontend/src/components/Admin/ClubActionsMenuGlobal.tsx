@@ -23,6 +23,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { ClubHistoryModal } from "./ClubHistoryModal"
 import EditClubGlobal from "./EditClubGlobal"
 
 interface ClubActionsMenuGlobalProps {
@@ -33,6 +34,7 @@ export const ClubActionsMenuGlobal = ({ club }: ClubActionsMenuGlobalProps) => {
   const [open, setOpen] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -59,6 +61,15 @@ export const ClubActionsMenuGlobal = ({ club }: ClubActionsMenuGlobalProps) => {
           <DropdownMenuItem
             onSelect={() => {
               setOpen(false)
+              setShowHistoryModal(true)
+            }}
+          >
+            Club History
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => {
+              setOpen(false)
               setShowEditDialog(true)
             }}
           >
@@ -76,6 +87,12 @@ export const ClubActionsMenuGlobal = ({ club }: ClubActionsMenuGlobalProps) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ClubHistoryModal
+        club={club}
+        open={showHistoryModal}
+        onOpenChange={setShowHistoryModal}
+      />
 
       <EditClubGlobal
         club={club}
