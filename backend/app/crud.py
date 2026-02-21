@@ -10,7 +10,7 @@ from app.models import (
     League, LeagueCreate, LeagueUpdate,
     Season, SeasonCreate, SeasonUpdate,
     Club, ClubCreate, ClubUpdate, ClubPublic,
-    ClubSeasonRelationship,
+    ClubSeasonRelationship, ClubSeasonHistory,
 )
 
 
@@ -246,3 +246,55 @@ def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Club
 def delete_club(*, session: Session, db_club: Club) -> None:
     session.delete(db_club)
     session.commit()
+
+
+def _build_history(*, session: Session, club_id: uuid.UUID) -> list[ClubSeasonHistory]:
+    links = session.exec(
+        select(ClubSeasonRelationship).where(ClubSeasonRelationship.club_id == club_id)
+    ).all()
+    history: list[ClubSeasonHistory] = []
+    for link in links:
+        season = session.get(Season, link.season_id)
+        if season:
+            league = session.get(League, season.league_id)
+            history.append(
+                ClubSeasonHistory(
+                    season_id=str(season.id),
+                    season_name=season.name,
+                    league_id=str(season.league_id),
+                    league_name=league.name if league else "Unknown",
+                )
+            )
+    return history
+
+
+def get_all_clubs(
+    *, session: Session, skip: int = 0, limit: int = 100
+) -> tuple[list[ClubPublic], int]:
+    count = session.exec(select(func.count()).select_from(Club)).one()
+    clubs = session.exec(
+        select(Club).order_by(col(Club.name)).offset(skip).limit(limit)
+    ).all()
+    result: list[ClubPublic] = []
+    for club in clubs:
+        sc = _get_season_count(session=session, club_id=club.id)
+        history = _build_history(session=session, club_id=club.id)
+        result.append(
+            ClubPublic(
+                id=club.id,
+                name=club.name,
+                ea_id=club.ea_id,
+                logo_url=club.logo_url,
+                created_at=club.created_at,
+                updated_at=club.updated_at,
+                season_count=sc,
+                history=history,
+            )
+        )
+    return result, count
+
+
+def get_club_season_history(
+    *, session: Session, club_id: uuid.UUID
+) -> list[ClubSeasonHistory]:
+    return _build_history(session=session, club_id=club_id)

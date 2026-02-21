@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import login, private, users, utils, leagues, seasons, clubs
+from app.api.routes import login, private, users, utils, leagues, seasons, clubs, clubs_global
 from app.core.config import settings
 
 api_router = APIRouter()
@@ -9,6 +9,7 @@ api_router.include_router(users.router)
 api_router.include_router(utils.router)
 api_router.include_router(leagues.router)
 api_router.include_router(seasons.router)
+api_router.include_router(clubs_global.router)
 api_router.include_router(clubs.router)
 
 if settings.ENVIRONMENT == "local":

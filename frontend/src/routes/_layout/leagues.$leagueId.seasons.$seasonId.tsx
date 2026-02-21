@@ -8,7 +8,8 @@ import { ArrowLeft } from "lucide-react"
 import { Suspense, useMemo } from "react"
 
 import { ClubsService, SeasonsService } from "@/client"
-import AddClub from "@/components/Admin/AddClub"
+import AddClubsToSeason from "@/components/Admin/AddClubsToSeason"
+import AddFromExisting from "@/components/Admin/AddFromExisting"
 import { makeClubColumns } from "@/components/Admin/clubColumns"
 import { DataTable } from "@/components/Common/DataTable"
 import { Button } from "@/components/ui/button"
@@ -114,7 +115,10 @@ function SeasonDetail() {
         >
           <SeasonHeader leagueId={leagueId} seasonId={seasonId} />
         </Suspense>
-        <AddClub leagueId={leagueId} seasonId={seasonId} />
+        <div className="flex items-center gap-2">
+          <AddFromExisting leagueId={leagueId} seasonId={seasonId} />
+          <AddClubsToSeason leagueId={leagueId} seasonId={seasonId} />
+        </div>
       </div>
       <ClubsTable leagueId={leagueId} seasonId={seasonId} />
     </div>
