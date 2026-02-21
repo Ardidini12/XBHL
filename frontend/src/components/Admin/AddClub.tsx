@@ -33,10 +33,10 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Club name is required" })
-    .max(255, { message: "Club name must be at most 255 characters" }),
+    .min(1, { error: "Club name is required" })
+    .max(255, { error: "Club name must be at most 255 characters" }),
   ea_id: z.string().max(255).optional().or(z.literal("")),
-  logo_url: z.string().optional().or(z.literal("")),
+  logo_url: z.string().url({ error: "Must be a valid URL" }).optional().or(z.literal("")),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -82,7 +82,7 @@ const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) form.reset(); setIsOpen(open) }}>
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />

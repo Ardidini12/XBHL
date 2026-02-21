@@ -160,6 +160,10 @@ def get_club_by_id(*, session: Session, club_id: uuid.UUID) -> Club | None:
     return session.get(Club, club_id)
 
 
+def get_club_by_name(*, session: Session, name: str) -> Club | None:
+    return session.exec(select(Club).where(Club.name == name)).first()
+
+
 def _get_season_count(*, session: Session, club_id: uuid.UUID) -> int:
     return session.exec(
         select(func.count())
@@ -204,6 +208,13 @@ def get_clubs_by_season(
 def add_club_to_season(
     *, session: Session, club_id: uuid.UUID, season_id: uuid.UUID
 ) -> None:
+    existing = session.exec(
+        select(ClubSeasonRelationship)
+        .where(ClubSeasonRelationship.club_id == club_id)
+        .where(ClubSeasonRelationship.season_id == season_id)
+    ).first()
+    if existing:
+        return
     link = ClubSeasonRelationship(club_id=club_id, season_id=season_id)
     session.add(link)
     session.commit()

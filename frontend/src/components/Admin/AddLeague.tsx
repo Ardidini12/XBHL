@@ -44,7 +44,7 @@ const formSchema = z.object({
     .min(1, { message: "League name is required" })
     .max(255, { message: "League name must be at most 255 characters" }),
   league_type: z.enum(["3v3", "6v6"] as const, {
-    message: "Please select a league type",
+    error: "Please select a league type",
   }),
   is_active: z.boolean(),
   description: z.string().optional(),

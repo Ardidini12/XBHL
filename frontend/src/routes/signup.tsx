@@ -95,18 +95,17 @@ function SignUp() {
     if (debouncedGamertag && debouncedGamertag.length >= 2) {
       checkGamertagAvailability("gamertag", debouncedGamertag)
     }
+  }, [debouncedGamertag, checkGamertagAvailability])
+
+  useEffect(() => {
     if (debouncedEmail && debouncedEmail.length >= 2) {
       checkEmailAvailability("email", debouncedEmail)
     }
-  }, [
-    debouncedGamertag,
-    checkGamertagAvailability,
-    debouncedEmail,
-    checkEmailAvailability,
-  ])
+  }, [debouncedEmail, checkEmailAvailability])
 
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
+    if (gamertagStatus === "unavailable" || emailStatus === "unavailable") return
 
     // exclude confirm_password from submission data
     const { confirm_password: _confirm_password, ...submitData } = data

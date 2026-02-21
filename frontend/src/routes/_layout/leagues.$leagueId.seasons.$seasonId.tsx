@@ -2,15 +2,12 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
   Link,
-  Outlet,
-  redirect,
   useParams,
-  useRouterState,
 } from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
 import { Suspense, useMemo } from "react"
 
-import { ClubsService, SeasonsService, UsersService } from "@/client"
+import { ClubsService, SeasonsService } from "@/client"
 import AddClub from "@/components/Admin/AddClub"
 import { makeClubColumns } from "@/components/Admin/clubColumns"
 import { DataTable } from "@/components/Common/DataTable"
@@ -38,17 +35,6 @@ export const Route = createFileRoute(
   "/_layout/leagues/$leagueId/seasons/$seasonId",
 )({
   component: SeasonDetail,
-  beforeLoad: async () => {
-    try {
-      const user = await UsersService.readUserMe()
-      if (!user.is_superuser) {
-        throw redirect({ to: "/" })
-      }
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e
-      throw redirect({ to: "/" })
-    }
-  },
   head: () => ({
     meta: [{ title: "Season - XBHL" }],
   }),
@@ -111,34 +97,26 @@ function SeasonDetail() {
   const { leagueId, seasonId } = useParams({
     from: "/_layout/leagues/$leagueId/seasons/$seasonId",
   })
-  const router = useRouterState()
-  const pathname = router.location.pathname
-  const isDeeper = pathname.split("/").length > 6
 
   return (
     <div className="flex flex-col gap-6">
-      <div className={isDeeper ? "hidden" : "flex flex-col gap-6"}>
-        <div>
-          <Button variant="ghost" asChild>
-            <Link to="/leagues/$leagueId" params={{ leagueId }}>
-              <ArrowLeft className="mr-2" />
-              Back to seasons
-            </Link>
-          </Button>
-        </div>
-        <div className="flex items-center justify-between">
-          <Suspense
-            fallback={<div className="text-muted-foreground">Loading...</div>}
-          >
-            <SeasonHeader leagueId={leagueId} seasonId={seasonId} />
-          </Suspense>
-          <AddClub leagueId={leagueId} seasonId={seasonId} />
-        </div>
-        <ClubsTable leagueId={leagueId} seasonId={seasonId} />
+      <div>
+        <Button variant="ghost" asChild>
+          <Link to="/leagues/$leagueId" params={{ leagueId }}>
+            <ArrowLeft className="mr-2" />
+            Back to seasons
+          </Link>
+        </Button>
       </div>
-      <div className={isDeeper ? "block" : "hidden"}>
-        <Outlet />
+      <div className="flex items-center justify-between">
+        <Suspense
+          fallback={<div className="text-muted-foreground">Loading...</div>}
+        >
+          <SeasonHeader leagueId={leagueId} seasonId={seasonId} />
+        </Suspense>
+        <AddClub leagueId={leagueId} seasonId={seasonId} />
       </div>
+      <ClubsTable leagueId={leagueId} seasonId={seasonId} />
     </div>
   )
 }

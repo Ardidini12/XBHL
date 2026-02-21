@@ -23,25 +23,26 @@
 - ✅ `User` (id, email, gamertag, full_name, hashed_password, is_superuser, created_at)
 - ✅ `League` (id, name, league_type[3v3|6v6], is_active, description, created_at, updated_at)
 - ✅ `Season` (id, league_id FK, name, start_date, end_date, created_at, updated_at)
-- ⏳ `Club` (id, name, ea_club_id, league_id, created_at)
+- ✅ `Club` (id, name, ea_club_id, league_id, created_at)
 - ⏳ `Player` (id, gamertag UNIQUE, full_name, user_id FK nullable, created_at)
 - ⏳ `Match` (id, match_id, timestamp, season_id FK, raw_json, created_at) — UNIQUE(match_id, timestamp)
 - ⏳ `SchedulerConfig` (id, league_id FK unique, active_days, start_time, end_time, interval_minutes, is_active)
 - ⏳ `SchedulerRun` (id, scheduler_config_id FK, started_at, ended_at, status, matches_ingested, error_msg)
-- ⏳ `ClubSeasonRelationship` (club_id FK, season_id FK) — join table
+- ✅ `ClubSeasonRelationship` (club_id FK, season_id FK) — join table
 - ⏳ `PlayerSeasonRelationship` (player_id FK, season_id FK) — join table
 - ⏳ `PlayerMatchHistory` (player_id FK, match_id FK, stats_json) — join table
 
 ### Database Migrations
 - ✅ Initial migration (User, League, Season tables)
-- ⏳ Migration for Club, Player, Match, Scheduler tables
+- ✅ Migration for Club + ClubSeasonRelationship tables
+- ⏳ Migration for Player, Match, Scheduler tables
 
 ### API Routes (`backend/app/api/routes/`)
 - ✅ `login.py` — authentication (email OR gamertag + password)
 - ✅ `users.py` — user CRUD
 - ✅ `leagues.py` — league CRUD
 - ✅ `seasons.py` — season CRUD (nested under league)
-- ⏳ `clubs.py` — club CRUD + EA club search
+- ✅ `clubs.py` — club CRUD (create, read, update, delete, season membership)
 - ⏳ `players.py` — player CRUD + career history endpoint
 - ⏳ `matches.py` — match read endpoints
 - ⏳ `scheduler.py` — scheduler config CRUD + start/stop/status
@@ -66,7 +67,7 @@
 - ✅ User CRUD
 - ✅ League CRUD (basic)
 - ✅ Season CRUD (basic)
-- ⏳ Club CRUD
+- ✅ Club CRUD
 - ⏳ Player CRUD
 - ⏳ Match CRUD (insert with deduplication)
 - ⏳ Scheduler CRUD
@@ -104,8 +105,8 @@
 - ⏳ Profile page (career timeline, match history)
 
 ### OpenAPI Client
-- ✅ Client generated for User, League, Season routes
-- ⏳ Regenerate after Club, Player, Match, Scheduler routes added
+- ✅ Client generated for User, League, Season, Club routes
+- ⏳ Regenerate after Player, Match, Scheduler routes added
 
 ---
 
