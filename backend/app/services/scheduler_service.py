@@ -134,6 +134,17 @@ async def _run_fetch_job(season_id_str: str) -> None:
             session.add(run)
             session.commit()
 
+            # Keep only the last 5 runs per scheduler config
+            all_runs = session.exec(
+                select(SchedulerRun)
+                .where(SchedulerRun.scheduler_config_id == config.id)
+                .order_by(col(SchedulerRun.started_at).desc())
+            ).all()
+            for old_run in all_runs[5:]:
+                session.delete(old_run)
+            if len(all_runs) > 5:
+                session.commit()
+
 
 def _store_match(
     session: Session,
