@@ -5,7 +5,7 @@ from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.db import engine
 from app.models import (
