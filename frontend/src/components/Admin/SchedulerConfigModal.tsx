@@ -76,6 +76,17 @@ interface SchedulerConfigModalProps {
   seasonId: string
 }
 
+/**
+ * Modal dialog UI for viewing and managing a season's scheduler configuration.
+ *
+ * Renders a Settings-triggered dialog that loads an existing scheduler (when opened),
+ * shows its status, and provides a form to create or update the scheduler (active days,
+ * start/end hours, and fetch interval). When a config exists, control buttons to start,
+ * pause, resume, stop, and delete the scheduler are also exposed.
+ *
+ * @param seasonId - Identifier of the season whose scheduler will be fetched and managed
+ * @returns The SchedulerConfigModal component JSX for configuring a season's scheduler
+ */
 export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()

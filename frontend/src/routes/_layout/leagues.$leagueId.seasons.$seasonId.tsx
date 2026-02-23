@@ -95,6 +95,14 @@ function ClubsTable({
   )
 }
 
+/**
+ * Render the season detail page for a specific league season.
+ *
+ * Reads `leagueId` and `seasonId` from route parameters and displays the season header,
+ * action controls (scheduler configuration modal, add-club actions), and the clubs table.
+ *
+ * @returns A React element that composes the season header, a row of action controls for managing the season, and the clubs table for the current season.
+ */
 function SeasonDetail() {
   const { leagueId, seasonId } = useParams({
     from: "/_layout/leagues/$leagueId/seasons/$seasonId",

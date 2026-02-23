@@ -32,7 +32,12 @@ EA_HEADERS = {
 
 
 async def search_club(club_name: str) -> str | None:
-    """Search EA for a club by name and return its clubId string, or None if not found."""
+    """
+    Search EA for a club by name and return its club identifier.
+    
+    Returns:
+        str | None: The club's `clubId` as a string if a match is found, otherwise `None`.
+    """
     url = f"{EA_BASE_URL}/clubs/search"
     params = {"platform": EA_PLATFORM, "clubName": club_name}
     try:
@@ -55,7 +60,12 @@ async def search_club(club_name: str) -> str | None:
 
 
 async def fetch_matches(club_id: str) -> list[dict[str, Any]]:
-    """Fetch recent private club matches for a given EA clubId."""
+    """
+    Fetch recent private matches for the specified EA club.
+    
+    Returns:
+        list[dict[str, Any]]: A list of match objects as returned by the EA API for the club; returns an empty list if no matches are found or if an error occurs.
+    """
     url = f"{EA_BASE_URL}/clubs/matches"
     params = {
         "matchType": EA_MATCH_TYPE,
