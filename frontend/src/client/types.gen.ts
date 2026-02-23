@@ -395,3 +395,163 @@ export type ClubsDeleteClubData = {
 };
 
 export type ClubsDeleteClubResponse = Message;
+
+// Scheduler types
+export type SchedulerConfigCreate = {
+    days_of_week?: Array<number>;
+    start_hour?: number;
+    end_hour?: number;
+    interval_minutes?: number;
+};
+
+export type SchedulerConfigUpdate = {
+    days_of_week?: (Array<number> | null);
+    start_hour?: (number | null);
+    end_hour?: (number | null);
+    interval_minutes?: (number | null);
+};
+
+export type SchedulerConfigPublic = {
+    id: string;
+    season_id: string;
+    is_active: boolean;
+    is_paused: boolean;
+    days_of_week: Array<number>;
+    start_hour: number;
+    end_hour: number;
+    interval_minutes: number;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type SchedulerConfigWithStatus = SchedulerConfigPublic & {
+    season_name?: (string | null);
+    league_name?: (string | null);
+    last_run_at?: (string | null);
+    last_run_status?: (string | null);
+    total_matches: number;
+    is_running: boolean;
+};
+
+export type SchedulerRunStatus = 'running' | 'success' | 'failed';
+
+export type SchedulerRunPublic = {
+    id: string;
+    scheduler_config_id: string;
+    season_id: string;
+    started_at: string;
+    finished_at?: (string | null);
+    status: SchedulerRunStatus;
+    matches_fetched: number;
+    matches_new: number;
+    error_message?: (string | null);
+};
+
+export type SchedulerRunsPublic = {
+    data: Array<SchedulerRunPublic>;
+    count: number;
+};
+
+// Scheduler request/response types
+export type SchedulersListAllSchedulersResponse = Array<SchedulerConfigWithStatus>;
+
+export type SchedulersGetSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersGetSchedulerResponse = SchedulerConfigWithStatus;
+
+export type SchedulersCreateSchedulerData = {
+    seasonId: string;
+    requestBody: SchedulerConfigCreate;
+};
+
+export type SchedulersCreateSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersUpdateSchedulerData = {
+    seasonId: string;
+    requestBody: SchedulerConfigUpdate;
+};
+
+export type SchedulersUpdateSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersDeleteSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersDeleteSchedulerResponse = Message;
+
+export type SchedulersStartSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersStartSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersStopSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersStopSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersPauseSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersPauseSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersResumeSchedulerData = {
+    seasonId: string;
+};
+
+export type SchedulersResumeSchedulerResponse = SchedulerConfigPublic;
+
+export type SchedulersGetSchedulerRunsData = {
+    seasonId: string;
+    skip?: number;
+    limit?: number;
+};
+
+export type SchedulersGetSchedulerRunsResponse = SchedulerRunsPublic;
+
+// Match types
+export type MatchPublic = {
+    id: string;
+    ea_match_id: string;
+    ea_timestamp: number;
+    season_id: string;
+    club_id: string;
+    home_club_ea_id?: (string | null);
+    away_club_ea_id?: (string | null);
+    home_score?: (number | null);
+    away_score?: (number | null);
+    created_at?: (string | null);
+};
+
+export type MatchWithContext = MatchPublic & {
+    season_name?: (string | null);
+    league_name?: (string | null);
+    is_home?: (boolean | null);
+    opponent_ea_id?: (string | null);
+};
+
+export type MatchesPublic = {
+    data: Array<MatchWithContext>;
+    count: number;
+};
+
+// Match request/response types
+export type MatchesGetClubMatchesData = {
+    clubId: string;
+    skip?: number;
+    limit?: number;
+};
+
+export type MatchesGetClubMatchesResponse = MatchesPublic;
+
+export type MatchesGetSeasonMatchesData = {
+    seasonId: string;
+    skip?: number;
+    limit?: number;
+};
+
+export type MatchesGetSeasonMatchesResponse = MatchesPublic;

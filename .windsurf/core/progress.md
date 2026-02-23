@@ -23,11 +23,11 @@
 - ✅ `User` (id, email, gamertag, full_name, hashed_password, is_superuser, created_at)
 - ✅ `League` (id, name, league_type[3v3|6v6], is_active, description, created_at, updated_at)
 - ✅ `Season` (id, league_id FK, name, start_date, end_date, created_at, updated_at)
-- ✅ `Club` (id, name, ea_club_id, league_id, created_at)
+- ✅ `Club` (id, name, ea_id, logo_url, created_at, updated_at)
 - ⏳ `Player` (id, gamertag UNIQUE, full_name, user_id FK nullable, created_at)
-- ⏳ `Match` (id, match_id, timestamp, season_id FK, raw_json, created_at) — UNIQUE(match_id, timestamp)
-- ⏳ `SchedulerConfig` (id, league_id FK unique, active_days, start_time, end_time, interval_minutes, is_active)
-- ⏳ `SchedulerRun` (id, scheduler_config_id FK, started_at, ended_at, status, matches_ingested, error_msg)
+- ✅ `Match` (id, ea_match_id, ea_timestamp, season_id FK, club_id FK, home/away scores, raw_json) — UNIQUE(ea_match_id, ea_timestamp)
+- ✅ `SchedulerConfig` (id, season_id FK unique, days_of_week, start_hour, end_hour, interval_minutes, is_active, is_paused)
+- ✅ `SchedulerRun` (id, scheduler_config_id FK, season_id FK, started_at, finished_at, status, matches_fetched, matches_new, error_message)
 - ✅ `ClubSeasonRelationship` (club_id FK, season_id FK) — join table
 - ⏳ `PlayerSeasonRelationship` (player_id FK, season_id FK) — join table
 - ⏳ `PlayerMatchHistory` (player_id FK, match_id FK, stats_json) — join table
@@ -35,7 +35,8 @@
 ### Database Migrations
 - ✅ Initial migration (User, League, Season tables)
 - ✅ Migration for Club + ClubSeasonRelationship tables
-- ⏳ Migration for Player, Match, Scheduler tables
+- ✅ Migration for Match, SchedulerConfig, SchedulerRun tables (`526f79a65431` — applied to DB, file recreated locally)
+- ⏳ Migration for Player, PlayerSeasonRelationship, PlayerMatchHistory tables
 
 ### API Routes (`backend/app/api/routes/`)
 - ✅ `login.py` — authentication (email OR gamertag + password)
@@ -43,25 +44,23 @@
 - ✅ `leagues.py` — league CRUD
 - ✅ `seasons.py` — season CRUD (nested under league)
 - ✅ `clubs.py` — club CRUD (create, read, update, delete, season membership)
+- ✅ `matches.py` — match read endpoints (by club, by season)
+- ✅ `schedulers.py` — scheduler config CRUD + start/stop/pause/resume + runs history
 - ⏳ `players.py` — player CRUD + career history endpoint
-- ⏳ `matches.py` — match read endpoints
-- ⏳ `scheduler.py` — scheduler config CRUD + start/stop/status
 
-### Service Layer (`backend/app/services/`) — NOT YET CREATED
+### Service Layer (`backend/app/services/`)
 - ⏳ `league_service.py`
 - ⏳ `season_service.py`
 - ⏳ `club_service.py`
 - ⏳ `player_service.py`
 - ⏳ `match_service.py`
-- ⏳ `scheduler_service.py`
+- ✅ `scheduler_service.py` — APScheduler singleton, per-season job isolation, fetch loop, audit logging
 
-### EA API Client (`backend/app/`) — NOT YET CREATED
-- ⏳ `ea_api_client.py` — HTTP client (club search + private matches)
+### EA API Client (`backend/app/services/`)
+- ✅ `ea_client.py` — HTTP client (club search + private match fetch, headers, error handling)
 
-### Scheduler System — NOT YET CREATED
-- ⏳ `scheduler_manager.py` — APScheduler singleton with per-league job isolation
-- ⏳ Job lifecycle: start, stop, resume, delete
-- ⏳ Ingestion loop: fetch → filter → deduplicate → store → log
+### Scheduler System
+- ✅ `scheduler_service.py` — APScheduler singleton, per-season job isolation, lifecycle (start/stop/pause/resume/delete), fetch loop, deduplication, audit logging
 
 ### CRUD (`backend/app/crud.py`)
 - ✅ User CRUD

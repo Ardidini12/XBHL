@@ -1,61 +1,57 @@
 # Active Context: XBHL
 
 ## Current Session
-- **Date**: 2026-02-21
-- **Focus**: League→Season→Club admin UI + Club backend (completed)
+- **Date**: 2026-02-23
+- **Focus**: Scheduler + Match backend + frontend (completed); Alembic chain fix
 
 ## Current Work State
 
-Club implementation is fully complete. The admin UI now supports navigating League → Season → Club with full CRUD. Alembic migration for `club` and `club_season` tables has been applied to production. Infrastructure note: no Docker locally — project is deployed online. All migration and client-gen commands are run by the user.
+Scheduler, Match, and EA API client are fully implemented. The Alembic migration chain was broken (DB had revision `526f79a65431` which was missing locally) — recreated the file. Frontend client types and service classes for Schedulers and Matches have been added manually to `types.gen.ts` and `sdk.gen.ts`. All migration and client-gen commands are run by the user — never automatically.
 
-## What Was Just Done
-1. **Sidebar fix** — `staleTime: 5min` on `currentUser` query; `isActive` uses `startsWith` in `Main.tsx`
-2. **Season edit** — `EditSeason.tsx` component; "Edit Name" + "Enter Season" added to `SeasonActionsMenu`
-3. **Season detail route** — `leagues.$leagueId.tsx` converted to parent layout with `Outlet`; `leagues.$leagueId.seasons.$seasonId.tsx` created
-4. **Club model** — `Club`, `ClubSeasonRelationship` added to `models.py`; migration applied
-5. **Club CRUD** — `create_club`, `get_clubs_by_season` (with season_count), `add_club_to_season`, `remove_club_from_season`, `update_club`, `delete_club` in `crud.py`
-6. **Club routes** — `clubs.py` nested under `/leagues/{league_id}/seasons/{season_id}/clubs/`; registered in `main.py`
-7. **Frontend client** — `ClubPublic`, `ClubsPublic`, `ClubCreate`, `ClubUpdate` types + `ClubsService` added to `types.gen.ts` + `sdk.gen.ts`
-8. **Frontend components** — `AddClub.tsx`, `EditClub.tsx`, `ClubActionsMenu.tsx`, `clubColumns.tsx` (factory pattern `makeClubColumns`)
-9. **Rules updated** — `.windsurfrules` Rule 17 added: no Docker, user runs all migrations and client-gen
+## What Was Just Done (Previous Session — 2026-02-21)
+1. **SchedulerConfig + SchedulerRun models** — added to `models.py`
+2. **Match model** — added to `models.py` with UNIQUE(ea_match_id, ea_timestamp)
+3. **EA API client** — `services/ea_client.py` (club search + match fetch)
+4. **Scheduler service** — `services/scheduler_service.py` (APScheduler per-season, lifecycle, fetch loop, audit logging)
+5. **Scheduler routes** — `api/routes/schedulers.py` (CRUD + start/stop/pause/resume/runs)
+6. **Match routes** — `api/routes/matches.py` (by club, by season)
+7. **FastAPI lifespan** — `main.py` starts/stops APScheduler, loads active jobs on startup
+8. **Frontend** — `SchedulerConfigModal.tsx`, `schedulers.tsx` route, Schedulers sidebar link
+
+## What Was Just Done (This Session — 2026-02-23)
+1. **Alembic chain fix** — recreated `526f79a65431_add_scheduler_match_models.py` (was applied to DB but file was lost)
+2. **Frontend client** — added Scheduler + Match types to `types.gen.ts`; added `SchedulersService` + `MatchesService` to `sdk.gen.ts`
 
 ## Immediate Next Steps (Priority Order)
 
-### Frontend
-1. **Push to git + redeploy** (user doing now) — `routeTree.gen.ts` will auto-regenerate on dev server start, clearing remaining TS errors
-2. **Season detail page polish** — verify clubs table renders correctly after deploy
-
 ### Backend
-1. **Player model** — `Player` (id, gamertag UNIQUE, full_name, user_id FK nullable)
-2. **PlayerSeasonRelationship** join table
-3. **Match model** — `Match` (id, match_id, timestamp, season_id FK, raw_json) — UNIQUE(match_id, timestamp)
-4. **SchedulerConfig + SchedulerRun** models
-5. **EA API client** — HTTP client for club search + private matches
-6. **Scheduler system** — APScheduler per-league job isolation
+1. **Run migration** — user must run `alembic upgrade head` from `backend/` to verify chain resolves (tables already exist in DB, so it should be a no-op)
+2. **Player model** — `Player` (id, gamertag UNIQUE, full_name, user_id FK nullable)
+3. **PlayerSeasonRelationship** join table
+4. **PlayerMatchHistory** join table
+
+### Frontend
+1. **Push to git + redeploy** — `routeTree.gen.ts` auto-regenerates on dev server start
+2. **SchedulerConfigModal integration** — wire into season detail page
 
 ## Open Questions / Decisions Pending
-- Scheduler: APScheduler (simpler) vs Celery+Redis (more robust)?
-- EA API platform parameter: confirm supported platform values
-- Match `raw_json` storage: JSONB column vs separate parsed stats table?
+- EA API platform parameter: `common-gen5` is set in `ea_client.py` — confirm this is correct for NHL 25
+- Player model: confirm if `club_id` FK is needed on Player or handled purely via match history
 
 ## Recently Modified Files
-- `backend/app/models.py` — Club, ClubSeasonRelationship added
-- `backend/app/crud.py` — Club CRUD added
-- `backend/app/api/routes/clubs.py` — created
-- `backend/app/api/main.py` — clubs router registered
-- `frontend/src/client/types.gen.ts` — Club types added
-- `frontend/src/client/sdk.gen.ts` — ClubsService added
-- `frontend/src/components/Admin/AddClub.tsx` — created
-- `frontend/src/components/Admin/EditClub.tsx` — created
-- `frontend/src/components/Admin/ClubActionsMenu.tsx` — created
-- `frontend/src/components/Admin/clubColumns.tsx` — created (makeClubColumns factory)
-- `frontend/src/components/Admin/EditSeason.tsx` — created
-- `frontend/src/components/Admin/SeasonActionsMenu.tsx` — Enter Season + Edit Name added
-- `frontend/src/routes/_layout/leagues.$leagueId.tsx` — converted to parent layout
-- `frontend/src/routes/_layout/leagues.$leagueId.seasons.$seasonId.tsx` — created
-- `frontend/src/components/Sidebar/Main.tsx` — isActive startsWith fix
-- `frontend/src/hooks/useAuth.ts` — staleTime added
-- `.windsurfrules` — Rule 17 (user-run commands) + infra/Docker note updated
+- `backend/app/models.py` — SchedulerConfig, SchedulerRun, Match models added
+- `backend/app/services/scheduler_service.py` — created
+- `backend/app/services/ea_client.py` — created
+- `backend/app/api/routes/schedulers.py` — created
+- `backend/app/api/routes/matches.py` — created
+- `backend/app/api/main.py` — schedulers + matches routers registered
+- `backend/app/main.py` — lifespan with APScheduler start/stop/load
+- `backend/app/alembic/versions/526f79a65431_add_scheduler_match_models.py` — recreated (chain fix)
+- `frontend/src/client/types.gen.ts` — Scheduler + Match types added
+- `frontend/src/client/sdk.gen.ts` — SchedulersService + MatchesService added
+- `frontend/src/components/Admin/SchedulerConfigModal.tsx` — created
+- `frontend/src/routes/_layout/schedulers.tsx` — created
+- `frontend/src/components/Sidebar/AppSidebar.tsx` — Schedulers link already present
 
 ## Blockers
-None. User pushing to git and redeploying.
+None. User needs to run `alembic upgrade head` from `backend/` to verify migration chain.

@@ -10,6 +10,7 @@ import { Suspense, useMemo } from "react"
 import { ClubsService, SeasonsService } from "@/client"
 import AddClub from "@/components/Admin/AddClub"
 import { makeClubColumns } from "@/components/Admin/clubColumns"
+import { SchedulerConfigModal } from "@/components/Admin/SchedulerConfigModal"
 import { DataTable } from "@/components/Common/DataTable"
 import { Button } from "@/components/ui/button"
 import { getLeagueQueryOptions } from "./leagues.$leagueId"
@@ -114,7 +115,10 @@ function SeasonDetail() {
         >
           <SeasonHeader leagueId={leagueId} seasonId={seasonId} />
         </Suspense>
-        <AddClub leagueId={leagueId} seasonId={seasonId} />
+        <div className="flex items-center gap-2">
+          <SchedulerConfigModal seasonId={seasonId} />
+          <AddClub leagueId={leagueId} seasonId={seasonId} />
+        </div>
       </div>
       <ClubsTable leagueId={leagueId} seasonId={seasonId} />
     </div>
