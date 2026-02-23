@@ -371,7 +371,19 @@ def load_active_schedulers() -> None:
         for config in configs:
             _schedule_job(config)
 
-        # Prune excess runs for every config on startup (cleans up existing data)
+        # Mark any orphaned RUNNING runs as FAILED (from previous crashed deploys)
+        orphaned = session.exec(
+            select(SchedulerRun).where(SchedulerRun.status == SchedulerRunStatus.RUNNING)
+        ).all()
+        for orphan in orphaned:
+            orphan.status = SchedulerRunStatus.FAILED
+            orphan.finished_at = datetime.now(timezone.utc)
+            orphan.error_message = "Server restarted before run completed"
+            session.add(orphan)
+        if orphaned:
+            session.commit()
+
+        # Prune to last 5 runs per config
         all_configs = session.exec(select(SchedulerConfig)).all()
         for cfg in all_configs:
             _prune_runs(session, cfg.id)
