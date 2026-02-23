@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import EmailStr
+from pydantic import EmailStr, model_validator
 from sqlalchemy import DateTime, JSON, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -262,7 +262,7 @@ class SchedulerConfig(SQLModel, table=True):
     days_of_week: list[int] = Field(default=[], sa_type=JSON)
     start_hour: int = Field(default=18, ge=0, le=23)
     end_hour: int = Field(default=23, ge=0, le=23)
-    interval_minutes: int = Field(default=30, ge=1)
+    interval_minutes: int = Field(default=30, ge=0)
     interval_seconds: int = Field(default=0, ge=0, le=59)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
@@ -279,16 +279,31 @@ class SchedulerConfigCreate(SQLModel):
     days_of_week: list[int] = Field(default=[])
     start_hour: int = Field(default=18, ge=0, le=23)
     end_hour: int = Field(default=23, ge=0, le=23)
-    interval_minutes: int = Field(default=30, ge=1)
+    interval_minutes: int = Field(default=30, ge=0)
     interval_seconds: int = Field(default=0, ge=0, le=59)
+
+    @model_validator(mode="after")
+    def total_interval_at_least_one_second(self) -> "SchedulerConfigCreate":
+        if self.interval_minutes * 60 + self.interval_seconds < 1:
+            raise ValueError("Total interval must be at least 1 second")
+        return self
 
 
 class SchedulerConfigUpdate(SQLModel):
     days_of_week: list[int] | None = None
     start_hour: int | None = Field(default=None, ge=0, le=23)
     end_hour: int | None = Field(default=None, ge=0, le=23)
-    interval_minutes: int | None = Field(default=None, ge=1)
+    interval_minutes: int | None = Field(default=None, ge=0)
     interval_seconds: int | None = Field(default=None, ge=0, le=59)
+
+    @model_validator(mode="after")
+    def total_interval_at_least_one_second(self) -> "SchedulerConfigUpdate":
+        mins = self.interval_minutes
+        secs = self.interval_seconds
+        if mins is not None and secs is not None:
+            if mins * 60 + secs < 1:
+                raise ValueError("Total interval must be at least 1 second")
+        return self
 
 
 class SchedulerConfigPublic(SQLModel):

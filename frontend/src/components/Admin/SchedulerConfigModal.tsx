@@ -62,7 +62,7 @@ const formSchema = z
     end_hour: z.string(),
     interval_minutes: z
       .number({ message: "Must be a number" })
-      .min(1, { message: "Minimum 1 minute" })
+      .min(0, { message: "Minimum 0 minutes" })
       .max(1440, { message: "Maximum 1440 minutes" }),
     interval_seconds: z
       .number({ message: "Must be a number" })
@@ -72,6 +72,10 @@ const formSchema = z
   .refine((d) => Number(d.start_hour) < Number(d.end_hour), {
     message: "Start hour must be before end hour",
     path: ["end_hour"],
+  })
+  .refine((d) => d.interval_minutes * 60 + d.interval_seconds >= 1, {
+    message: "Total interval must be at least 1 second",
+    path: ["interval_seconds"],
   })
 
 type FormData = z.infer<typeof formSchema>
@@ -339,7 +343,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
                       <FormControl>
                         <Input
                           type="number"
-                          min={1}
+                          min={0}
                           max={1440}
                           className="w-24"
                           {...field}

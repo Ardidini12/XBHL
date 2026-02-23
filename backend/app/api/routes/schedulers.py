@@ -51,6 +51,7 @@ def _enrich_config(
         start_hour=config.start_hour,
         end_hour=config.end_hour,
         interval_minutes=config.interval_minutes,
+        interval_seconds=config.interval_seconds,
         created_at=config.created_at,
         updated_at=config.updated_at,
         season_name=season.name if season else None,
