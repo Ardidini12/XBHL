@@ -135,15 +135,7 @@ async def _run_fetch_job(season_id_str: str) -> None:
             session.commit()
 
             # Keep only the last 5 runs per scheduler config
-            all_runs = session.exec(
-                select(SchedulerRun)
-                .where(SchedulerRun.scheduler_config_id == config.id)
-                .order_by(col(SchedulerRun.started_at).desc())
-            ).all()
-            for old_run in all_runs[5:]:
-                session.delete(old_run)
-            if len(all_runs) > 5:
-                session.commit()
+            _prune_runs(session, config.id)
 
 
 def _store_match(
@@ -353,6 +345,20 @@ def is_job_running(season_id: uuid.UUID) -> bool:
 # Startup: reload all active configs
 # ---------------------------------------------------------------------------
 
+def _prune_runs(session: Session, config_id: uuid.UUID, keep: int = 5) -> None:
+    """Delete all but the most recent `keep` runs for a given scheduler config."""
+    to_delete = session.exec(
+        select(SchedulerRun)
+        .where(SchedulerRun.scheduler_config_id == config_id)
+        .order_by(col(SchedulerRun.started_at).desc())
+        .offset(keep)
+    ).all()
+    for run in to_delete:
+        session.delete(run)
+    if to_delete:
+        session.commit()
+
+
 def load_active_schedulers() -> None:
     """Called on FastAPI startup to restore all active, non-paused scheduler jobs."""
     with Session(engine) as session:
@@ -364,4 +370,10 @@ def load_active_schedulers() -> None:
         ).all()
         for config in configs:
             _schedule_job(config)
+
+        # Prune excess runs for every config on startup (cleans up existing data)
+        all_configs = session.exec(select(SchedulerConfig)).all()
+        for cfg in all_configs:
+            _prune_runs(session, cfg.id)
+
     logger.info("Loaded %s active scheduler(s) on startup.", len(configs))
