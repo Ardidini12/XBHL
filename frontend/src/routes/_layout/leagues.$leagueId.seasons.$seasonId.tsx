@@ -11,6 +11,7 @@ import { ClubsService, SeasonsService } from "@/client"
 import AddClubsToSeason from "@/components/Admin/AddClubsToSeason"
 import AddFromExisting from "@/components/Admin/AddFromExisting"
 import { makeClubColumns } from "@/components/Admin/clubColumns"
+import { SchedulerConfigModal } from "@/components/Admin/SchedulerConfigModal"
 import { DataTable } from "@/components/Common/DataTable"
 import { Button } from "@/components/ui/button"
 import { getLeagueQueryOptions } from "./leagues.$leagueId"
@@ -116,6 +117,8 @@ function SeasonDetail() {
           <SeasonHeader leagueId={leagueId} seasonId={seasonId} />
         </Suspense>
         <div className="flex items-center gap-2">
+          <SchedulerConfigModal seasonId={seasonId} />
+          <AddClub leagueId={leagueId} seasonId={seasonId} />
           <AddFromExisting leagueId={leagueId} seasonId={seasonId} />
           <AddClubsToSeason leagueId={leagueId} seasonId={seasonId} />
         </div>

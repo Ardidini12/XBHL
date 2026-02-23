@@ -1,3 +1,4 @@
+import { CalendarClock, Home, Trophy, Users } from "lucide-react"
 import { Home, ShieldHalf, Trophy, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -22,6 +23,7 @@ export function AppSidebar() {
         ...baseItems,
         { icon: Users, title: "Admin", path: "/admin" },
         { icon: Trophy, title: "XBHL", path: "/leagues" },
+        { icon: CalendarClock, title: "Schedulers", path: "/schedulers" },
         { icon: ShieldHalf, title: "Clubs", path: "/clubs" },
       ]
     : baseItems

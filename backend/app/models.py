@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, JSON, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -246,3 +247,159 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# SchedulerConfig Model
+
+class SchedulerConfig(SQLModel, table=True):
+    __tablename__ = "scheduler_config"  # type: ignore
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    season_id: uuid.UUID = Field(
+        foreign_key="season.id", unique=True, ondelete="CASCADE"
+    )
+    is_active: bool = Field(default=False)
+    is_paused: bool = Field(default=False)
+    days_of_week: list[int] = Field(default=[], sa_type=JSON)
+    start_hour: int = Field(default=18, ge=0, le=23)
+    end_hour: int = Field(default=23, ge=0, le=23)
+    interval_minutes: int = Field(default=30, ge=1)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    runs: list["SchedulerRun"] = Relationship(back_populates="scheduler_config")
+
+
+class SchedulerConfigCreate(SQLModel):
+    days_of_week: list[int] = Field(default=[])
+    start_hour: int = Field(default=18, ge=0, le=23)
+    end_hour: int = Field(default=23, ge=0, le=23)
+    interval_minutes: int = Field(default=30, ge=1)
+
+
+class SchedulerConfigUpdate(SQLModel):
+    days_of_week: list[int] | None = None
+    start_hour: int | None = Field(default=None, ge=0, le=23)
+    end_hour: int | None = Field(default=None, ge=0, le=23)
+    interval_minutes: int | None = Field(default=None, ge=1)
+
+
+class SchedulerConfigPublic(SQLModel):
+    id: uuid.UUID
+    season_id: uuid.UUID
+    is_active: bool
+    is_paused: bool
+    days_of_week: list[int]
+    start_hour: int
+    end_hour: int
+    interval_minutes: int
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class SchedulerConfigWithStatus(SchedulerConfigPublic):
+    season_name: str | None = None
+    league_name: str | None = None
+    last_run_at: datetime | None = None
+    last_run_status: str | None = None
+    total_matches: int = 0
+    is_running: bool = False
+
+
+# Match Model
+
+class Match(SQLModel, table=True):
+    __tablename__ = "match"  # type: ignore
+    __table_args__ = (
+        UniqueConstraint("ea_match_id", "ea_timestamp", name="uq_match_ea_match_id_timestamp"),
+    )
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    ea_match_id: str = Field(index=True, max_length=64)
+    ea_timestamp: int
+    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE")
+    club_id: uuid.UUID = Field(foreign_key="club.id", ondelete="CASCADE")
+    home_club_ea_id: str | None = Field(default=None, max_length=64)
+    away_club_ea_id: str | None = Field(default=None, max_length=64)
+    home_score: int | None = Field(default=None)
+    away_score: int | None = Field(default=None)
+    raw_json: dict[str, Any] | None = Field(default=None, sa_type=JSON)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class MatchPublic(SQLModel):
+    id: uuid.UUID
+    ea_match_id: str
+    ea_timestamp: int
+    season_id: uuid.UUID
+    club_id: uuid.UUID
+    home_club_ea_id: str | None = None
+    away_club_ea_id: str | None = None
+    home_score: int | None = None
+    away_score: int | None = None
+    created_at: datetime | None = None
+
+
+class MatchWithContext(MatchPublic):
+    season_name: str | None = None
+    league_name: str | None = None
+    is_home: bool | None = None
+    opponent_ea_id: str | None = None
+
+
+class MatchesPublic(SQLModel):
+    data: list[MatchWithContext]
+    count: int
+
+
+# SchedulerRun Model
+
+class SchedulerRunStatus(str, Enum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class SchedulerRun(SQLModel, table=True):
+    __tablename__ = "scheduler_run"  # type: ignore
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    scheduler_config_id: uuid.UUID = Field(
+        foreign_key="scheduler_config.id", ondelete="CASCADE"
+    )
+    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE")
+    started_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    finished_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    status: SchedulerRunStatus = Field(default=SchedulerRunStatus.RUNNING)
+    matches_fetched: int = Field(default=0)
+    matches_new: int = Field(default=0)
+    error_message: str | None = Field(default=None)
+    scheduler_config: SchedulerConfig = Relationship(back_populates="runs")
+
+
+class SchedulerRunPublic(SQLModel):
+    id: uuid.UUID
+    scheduler_config_id: uuid.UUID
+    season_id: uuid.UUID
+    started_at: datetime
+    finished_at: datetime | None = None
+    status: SchedulerRunStatus
+    matches_fetched: int
+    matches_new: int
+    error_message: str | None = None
+
+
+class SchedulerRunsPublic(SQLModel):
+    data: list[SchedulerRunPublic]
+    count: int

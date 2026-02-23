@@ -1,4 +1,4 @@
-1) get club id: 
+endpoint: 1) get club id: 
 curl -H "Host: proclubs.ea.com" -H "sec-ch-ua-platform: \"Windows\"" -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" -H "accept: application/json" -H "sec-ch-ua: \"Not;A=Brand\";v=\"99\", \"Google Chrome\";v=\"139\", \"Chromium\";v=\"139\"" -H "content-type: application/json" -H "sec-ch-ua-mobile: ?0" -H "origin: https://www.ea.com" -H "sec-fetch-site: same-site" -H "sec-fetch-mode: cors" -H "sec-fetch-dest: empty" -H "referer: https://www.ea.com/" -H "accept-language: en-US,en;q=0.9" -H "priority: u=1, i" --compressed "https://proclubs.ea.com/api/nhl/clubs/search?platform=common-gen5&clubName=vvhl%20tampa%20bay%20tribe"
 
 response type: 
@@ -105,7 +105,7 @@ response type:
 
 
 
-2) get league matches using club id: 
+endpoint: 2) get league matches using club id: 
 curl -H "Host: proclubs.ea.com" -H "sec-ch-ua-platform: \"Windows\"" -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" -H "accept: application/json" -H "sec-ch-ua: \"Not;A=Brand\";v=\"99\", \"Google Chrome\";v=\"139\", \"Chromium\";v=\"139\"" -H "sec-ch-ua-mobile: ?0" -H "origin: https://www.ea.com" -H "sec-fetch-site: same-site" -H "sec-fetch-mode: cors" -H "sec-fetch-dest: empty" -H "referer: https://www.ea.com/" -H "accept-language: en-US,en;q=0.9" -H "priority: u=1, i" --compressed "https://proclubs.ea.com/api/nhl/clubs/matches?matchType=club_private&platform=common-gen5&clubIds=24504"
 
 response type: 
