@@ -18,6 +18,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutSchedulersRouteImport } from './routes/_layout/schedulers'
 import { Route as LayoutLeaguesRouteImport } from './routes/_layout/leagues'
+import { Route as LayoutClubsRouteImport } from './routes/_layout/clubs'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutLeaguesLeagueIdRouteImport } from './routes/_layout/leagues.$leagueId'
 import { Route as LayoutLeaguesLeagueIdSeasonsSeasonIdRouteImport } from './routes/_layout/leagues.$leagueId.seasons.$seasonId'
@@ -66,6 +67,11 @@ const LayoutLeaguesRoute = LayoutLeaguesRouteImport.update({
   path: '/leagues',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutClubsRoute = LayoutClubsRouteImport.update({
+  id: '/clubs',
+  path: '/clubs',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/clubs': typeof LayoutClubsRoute
   '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/schedulers': typeof LayoutSchedulersRoute
   '/settings': typeof LayoutSettingsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/clubs': typeof LayoutClubsRoute
   '/leagues': typeof LayoutLeaguesRouteWithChildren
   '/schedulers': typeof LayoutSchedulersRoute
   '/settings': typeof LayoutSettingsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/clubs': typeof LayoutClubsRoute
   '/_layout/leagues': typeof LayoutLeaguesRouteWithChildren
   '/_layout/schedulers': typeof LayoutSchedulersRoute
   '/_layout/settings': typeof LayoutSettingsRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/clubs'
     | '/leagues'
     | '/schedulers'
     | '/settings'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/clubs'
     | '/leagues'
     | '/schedulers'
     | '/settings'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
+    | '/_layout/clubs'
     | '/_layout/leagues'
     | '/_layout/schedulers'
     | '/_layout/settings'
@@ -240,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLeaguesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/clubs': {
+      id: '/_layout/clubs'
+      path: '/clubs'
+      fullPath: '/clubs'
+      preLoaderRoute: typeof LayoutClubsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin': {
       id: '/_layout/admin'
       path: '/admin'
@@ -292,6 +311,7 @@ const LayoutLeaguesRouteWithChildren = LayoutLeaguesRoute._addFileChildren(
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutClubsRoute: typeof LayoutClubsRoute
   LayoutLeaguesRoute: typeof LayoutLeaguesRouteWithChildren
   LayoutSchedulersRoute: typeof LayoutSchedulersRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
@@ -300,6 +320,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutClubsRoute: LayoutClubsRoute,
   LayoutLeaguesRoute: LayoutLeaguesRouteWithChildren,
   LayoutSchedulersRoute: LayoutSchedulersRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,

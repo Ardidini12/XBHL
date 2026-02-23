@@ -10,7 +10,7 @@ from app.models import (
     League, LeagueCreate, LeagueUpdate,
     Season, SeasonCreate, SeasonUpdate,
     Club, ClubCreate, ClubUpdate, ClubPublic,
-    ClubSeasonRelationship,
+    ClubSeasonRelationship, ClubSeasonHistory,
 )
 
 
@@ -164,12 +164,16 @@ def get_club_by_name(*, session: Session, name: str) -> Club | None:
     return session.exec(select(Club).where(Club.name == name)).first()
 
 
-def _get_season_count(*, session: Session, club_id: uuid.UUID) -> int:
+def get_season_count(*, session: Session, club_id: uuid.UUID) -> int:
     return session.exec(
         select(func.count())
         .select_from(ClubSeasonRelationship)
         .where(ClubSeasonRelationship.club_id == club_id)
     ).one()
+
+
+def _get_season_count(*, session: Session, club_id: uuid.UUID) -> int:
+    return get_season_count(session=session, club_id=club_id)
 
 
 def get_clubs_by_season(
@@ -190,18 +194,7 @@ def get_clubs_by_season(
     for link in links:
         club = session.get(Club, link.club_id)
         if club:
-            sc = _get_season_count(session=session, club_id=club.id)
-            result.append(
-                ClubPublic(
-                    id=club.id,
-                    name=club.name,
-                    ea_id=club.ea_id,
-                    logo_url=club.logo_url,
-                    created_at=club.created_at,
-                    updated_at=club.updated_at,
-                    season_count=sc,
-                )
-            )
+            result.append(build_club_public(session=session, club=club))
     return result, count
 
 
@@ -246,3 +239,60 @@ def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Club
 def delete_club(*, session: Session, db_club: Club) -> None:
     session.delete(db_club)
     session.commit()
+
+
+def build_club_public(*, session: Session, club: Club) -> ClubPublic:
+    sc = get_season_count(session=session, club_id=club.id)
+    history = _build_history(session=session, club_id=club.id)
+    return ClubPublic(
+        id=club.id,
+        name=club.name,
+        ea_id=club.ea_id,
+        logo_url=club.logo_url,
+        created_at=club.created_at,
+        updated_at=club.updated_at,
+        season_count=sc,
+        history=history,
+    )
+
+
+def _build_history(*, session: Session, club_id: uuid.UUID) -> list[ClubSeasonHistory]:
+    links = session.exec(
+        select(ClubSeasonRelationship).where(ClubSeasonRelationship.club_id == club_id)
+    ).all()
+    history: list[ClubSeasonHistory] = []
+    for link in links:
+        season = session.get(Season, link.season_id)
+        if season:
+            league = session.get(League, season.league_id)
+            history.append(
+                ClubSeasonHistory(
+                    season_id=str(season.id),
+                    season_name=season.name,
+                    league_id=str(season.league_id),
+                    league_name=league.name if league else "Unknown",
+                    is_active=season.end_date is None,
+                    start_date=season.start_date,
+                    end_date=season.end_date,
+                )
+            )
+    return history
+
+
+def get_all_clubs(
+    *, session: Session, skip: int = 0, limit: int = 100
+) -> tuple[list[ClubPublic], int]:
+    count = session.exec(select(func.count()).select_from(Club)).one()
+    clubs = session.exec(
+        select(Club).order_by(col(Club.name)).offset(skip).limit(limit)
+    ).all()
+    result: list[ClubPublic] = []
+    for club in clubs:
+        result.append(build_club_public(session=session, club=club))
+    return result, count
+
+
+def get_club_season_history(
+    *, session: Session, club_id: uuid.UUID
+) -> list[ClubSeasonHistory]:
+    return _build_history(session=session, club_id=club_id)

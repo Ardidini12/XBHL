@@ -334,6 +334,16 @@ export type SeasonsDeleteSeasonData = {
 export type SeasonsDeleteSeasonResponse = Message;
 
 // Club types
+export type ClubSeasonHistory = {
+    season_id: string;
+    season_name: string;
+    league_id: string;
+    league_name: string;
+    is_active: boolean;
+    start_date?: (string | null);
+    end_date?: (string | null);
+};
+
 export type ClubCreate = {
     name: string;
     ea_id?: (string | null);
@@ -348,6 +358,7 @@ export type ClubPublic = {
     created_at?: (string | null);
     updated_at?: (string | null);
     season_count: number;
+    history?: Array<ClubSeasonHistory>;
 };
 
 export type ClubsPublic = {
@@ -361,7 +372,7 @@ export type ClubUpdate = {
     logo_url?: (string | null);
 };
 
-// Club request/response types
+// Club request/response types (season-scoped)
 export type ClubsReadClubsData = {
     leagueId: string;
     seasonId: string;
@@ -378,6 +389,14 @@ export type ClubsCreateClubData = {
 };
 
 export type ClubsCreateClubResponse = ClubPublic;
+
+export type ClubsAssignClubData = {
+    leagueId: string;
+    seasonId: string;
+    clubId: string;
+};
+
+export type ClubsAssignClubResponse = ClubPublic;
 
 export type ClubsUpdateClubData = {
     leagueId: string;
@@ -555,3 +574,42 @@ export type MatchesGetSeasonMatchesData = {
 };
 
 export type MatchesGetSeasonMatchesResponse = MatchesPublic;
+// Global clubs request/response types
+export type GlobalClubsReadAllData = {
+    skip?: number;
+    limit?: number;
+};
+
+export type GlobalClubsReadAllResponse = ClubsPublic;
+
+export type GlobalClubsCreateData = {
+    requestBody: ClubCreate;
+};
+
+export type GlobalClubsCreateResponse = ClubPublic;
+
+export type GlobalClubsReadOneData = {
+    clubId: string;
+};
+
+export type GlobalClubsReadOneResponse = ClubPublic;
+
+export type GlobalClubsUpdateData = {
+    clubId: string;
+    requestBody: ClubUpdate;
+};
+
+export type GlobalClubsUpdateResponse = ClubPublic;
+
+export type GlobalClubsDeleteData = {
+    clubId: string;
+};
+
+export type GlobalClubsDeleteResponse = Message;
+
+export type GlobalClubsAssignData = {
+    clubId: string;
+    seasonId: string;
+};
+
+export type GlobalClubsAssignResponse = ClubPublic;

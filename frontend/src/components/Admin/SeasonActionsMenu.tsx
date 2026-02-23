@@ -48,6 +48,7 @@ export const SeasonActionsMenu = ({ season }: SeasonActionsMenuProps) => {
       showSuccessToast("Season ended successfully")
       setShowEndDialog(false)
       queryClient.invalidateQueries({ queryKey: ["seasons", season.league_id] })
+      queryClient.invalidateQueries({ queryKey: ["clubs-global"] })
     },
     onError: handleError.bind(showErrorToast),
   })

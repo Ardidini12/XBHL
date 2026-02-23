@@ -382,312 +382,224 @@ export class UtilsService {
 }
 
 export class LeaguesService {
-    /**
-     * Read Leagues
-     * Retrieve leagues.
-     * @param data The data for the request.
-     * @param data.skip
-     * @param data.limit
-     * @returns LeaguesPublic Successful Response
-     * @throws ApiError
-     */
     public static readLeagues(data: LeaguesReadLeaguesData = {}): CancelablePromise<LeaguesReadLeaguesResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leagues/',
-            query: {
-                skip: data.skip,
-                limit: data.limit
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            query: { skip: data.skip, limit: data.limit },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Create League
-     * Create a new league.
-     * @param data The data for the request.
-     * @param data.requestBody
-     * @returns LeaguePublic Successful Response
-     * @throws ApiError
-     */
     public static createLeague(data: LeaguesCreateLeagueData): CancelablePromise<LeaguesCreateLeagueResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/leagues/',
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Read League By Id
-     * Get a specific league by id.
-     * @param data The data for the request.
-     * @param data.leagueId
-     * @returns LeaguePublic Successful Response
-     * @throws ApiError
-     */
     public static readLeagueById(data: LeaguesReadLeagueByIdData): CancelablePromise<LeaguesReadLeagueByIdResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leagues/{league_id}',
-            path: {
-                league_id: data.leagueId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Update League
-     * Update a league.
-     * @param data The data for the request.
-     * @param data.leagueId
-     * @param data.requestBody
-     * @returns LeaguePublic Successful Response
-     * @throws ApiError
-     */
     public static updateLeague(data: LeaguesUpdateLeagueData): CancelablePromise<LeaguesUpdateLeagueResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/leagues/{league_id}',
-            path: {
-                league_id: data.leagueId
-            },
+            path: { league_id: data.leagueId },
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Delete League
-     * Delete a league.
-     * @param data The data for the request.
-     * @param data.leagueId
-     * @returns Message Successful Response
-     * @throws ApiError
-     */
     public static deleteLeague(data: LeaguesDeleteLeagueData): CancelablePromise<LeaguesDeleteLeagueResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/leagues/{league_id}',
-            path: {
-                league_id: data.leagueId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId },
+            errors: { 422: 'Validation Error' }
         });
     }
 }
 
 export class SeasonsService {
-    /**
-     * Read Seasons
-     * List all seasons for a league.
-     */
     public static readSeasons(data: SeasonsReadSeasonsData): CancelablePromise<SeasonsReadSeasonsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leagues/{league_id}/seasons/',
-            path: {
-                league_id: data.leagueId
-            },
-            query: {
-                skip: data.skip,
-                limit: data.limit
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId },
+            query: { skip: data.skip, limit: data.limit },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Create Season
-     * Create a new season. start_date is set automatically server-side.
-     */
     public static createSeason(data: SeasonsCreateSeasonData): CancelablePromise<SeasonsCreateSeasonResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/leagues/{league_id}/seasons/',
-            path: {
-                league_id: data.leagueId
-            },
+            path: { league_id: data.leagueId },
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Get Season
-     * Get a specific season by id.
-     */
     public static getSeason(data: SeasonsGetSeasonData): CancelablePromise<SeasonsGetSeasonResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId, season_id: data.seasonId },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Update Season
-     * Update a season name.
-     */
     public static updateSeason(data: SeasonsUpdateSeasonData): CancelablePromise<SeasonsUpdateSeasonResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
+            path: { league_id: data.leagueId, season_id: data.seasonId },
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * End Season
-     * End a season — sets end_date to current UTC time.
-     */
     public static endSeason(data: SeasonsEndSeasonData): CancelablePromise<SeasonsEndSeasonResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/end',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId, season_id: data.seasonId },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Delete Season
-     * Delete a season.
-     */
     public static deleteSeason(data: SeasonsDeleteSeasonData): CancelablePromise<SeasonsDeleteSeasonResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId, season_id: data.seasonId },
+            errors: { 422: 'Validation Error' }
         });
     }
 }
 
 export class ClubsService {
-    /**
-     * Read Clubs
-     * List all clubs in a season.
-     */
     public static readClubs(data: ClubsReadClubsData): CancelablePromise<ClubsReadClubsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
-            query: {
-                skip: data.skip,
-                limit: data.limit
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId, season_id: data.seasonId },
+            query: { skip: data.skip, limit: data.limit },
+            errors: { 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Create Club
-     * Create a new club and add it to the season.
-     */
     public static createClub(data: ClubsCreateClubData): CancelablePromise<ClubsCreateClubResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId
-            },
+            path: { league_id: data.leagueId, season_id: data.seasonId },
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 409: 'Club name already exists', 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Update Club
-     * Update a club's name, EA ID, or logo URL.
-     */
+    public static assignClub(data: ClubsAssignClubData): CancelablePromise<ClubsAssignClubResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/assign/{club_id}',
+            path: { league_id: data.leagueId, season_id: data.seasonId, club_id: data.clubId },
+            errors: { 409: 'Conflict', 422: 'Validation Error' }
+        });
+    }
+
     public static updateClub(data: ClubsUpdateClubData): CancelablePromise<ClubsUpdateClubResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/{club_id}',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId,
-                club_id: data.clubId
-            },
+            path: { league_id: data.leagueId, season_id: data.seasonId, club_id: data.clubId },
             body: data.requestBody,
             mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
+            errors: { 409: 'Club name already exists', 422: 'Validation Error' }
         });
     }
 
-    /**
-     * Delete Club
-     * Remove a club from this season.
-     */
     public static deleteClub(data: ClubsDeleteClubData): CancelablePromise<ClubsDeleteClubResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/leagues/{league_id}/seasons/{season_id}/clubs/{club_id}',
-            path: {
-                league_id: data.leagueId,
-                season_id: data.seasonId,
-                club_id: data.clubId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
+            path: { league_id: data.leagueId, season_id: data.seasonId, club_id: data.clubId },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+}
+
+export class GlobalClubsService {
+    public static readAllClubs(data: GlobalClubsReadAllData = {}): CancelablePromise<GlobalClubsReadAllResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/clubs/',
+            query: { skip: data.skip, limit: data.limit },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+
+    public static createClub(data: GlobalClubsCreateData): CancelablePromise<GlobalClubsCreateResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/clubs/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: { 409: 'Club name already exists', 422: 'Validation Error' }
+        });
+    }
+
+    public static readClub(data: GlobalClubsReadOneData): CancelablePromise<GlobalClubsReadOneResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/clubs/{club_id}',
+            path: { club_id: data.clubId },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+
+    public static updateClub(data: GlobalClubsUpdateData): CancelablePromise<GlobalClubsUpdateResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/clubs/{club_id}',
+            path: { club_id: data.clubId },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: { 409: 'Club name already exists', 422: 'Validation Error' }
+        });
+    }
+
+    public static deleteClub(data: GlobalClubsDeleteData): CancelablePromise<GlobalClubsDeleteResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/clubs/{club_id}',
+            path: { club_id: data.clubId },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+
+    public static assignClubToSeason(data: GlobalClubsAssignData): CancelablePromise<GlobalClubsAssignResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/clubs/{club_id}/assign',
+            path: { club_id: data.clubId },
+            query: { season_id: data.seasonId },
+            errors: { 409: 'Conflict', 422: 'Validation Error' }
         });
     }
 }

@@ -167,8 +167,18 @@ class SeasonsPublic(SQLModel):
 
 # Club Model
 
+class ClubSeasonHistory(SQLModel):
+    season_id: str
+    season_name: str
+    league_id: str
+    league_name: str
+    is_active: bool = True
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+
 class ClubBase(SQLModel):
-    name: str = Field(max_length=255)
+    name: str = Field(unique=True, index=True, max_length=255)
     ea_id: str | None = Field(default=None, max_length=255)
     logo_url: str | None = Field(default=None)
 
@@ -197,6 +207,7 @@ class ClubPublic(ClubBase):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     season_count: int = 0
+    history: list["ClubSeasonHistory"] = []
 
 class ClubsPublic(SQLModel):
     data: list[ClubPublic]

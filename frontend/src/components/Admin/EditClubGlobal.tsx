@@ -1,11 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type ClubCreate, ClubsService } from "@/client"
+import { GlobalClubsService, type ClubUpdate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -33,21 +31,30 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { error: "Club name is required" })
-    .max(255, { error: "Club name must be at most 255 characters" }),
+    .min(1, { message: "Club name is required" })
+    .max(255, { message: "Max 255 characters" }),
   ea_id: z.string().max(255).optional().or(z.literal("")),
-  logo_url: z.string().url({ error: "Must be a valid URL" }).optional().or(z.literal("")),
+  logo_url: z
+    .string()
+    .url({ message: "Must be a valid URL" })
+    .optional()
+    .or(z.literal("")),
 })
 
 type FormData = z.infer<typeof formSchema>
 
-interface AddClubProps {
-  leagueId: string
-  seasonId: string
+interface EditClubGlobalProps {
+  club: {
+    id: string
+    name: string
+    ea_id?: string | null
+    logo_url?: string | null
+  }
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+const EditClubGlobal = ({ club, open, onOpenChange }: EditClubGlobalProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -55,45 +62,51 @@ const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: { name: "", ea_id: "", logo_url: "" },
+    defaultValues: {
+      name: club.name,
+      ea_id: club.ea_id ?? "",
+      logo_url: club.logo_url ?? "",
+    },
   })
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: club.name,
+        ea_id: club.ea_id ?? "",
+        logo_url: club.logo_url ?? "",
+      })
+    }
+  }, [open, club, form])
+
   const mutation = useMutation({
-    mutationFn: (data: ClubCreate) =>
-      ClubsService.createClub({ leagueId, seasonId, requestBody: data }),
+    mutationFn: (data: ClubUpdate) =>
+      GlobalClubsService.updateClub({ clubId: club.id, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Club added successfully")
-      form.reset()
-      setIsOpen(false)
+      showSuccessToast("Club updated successfully")
+      onOpenChange(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["clubs", leagueId, seasonId] })
+      queryClient.invalidateQueries({ queryKey: ["clubs-global"] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    const payload: ClubCreate = {
+    mutation.mutate({
       name: data.name,
       ea_id: data.ea_id || null,
       logo_url: data.logo_url || null,
-    }
-    mutation.mutate(payload)
+    })
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) form.reset(); setIsOpen(open) }}>
-      <DialogTrigger asChild>
-        <Button className="my-4">
-          <Plus className="mr-2" />
-          Add Club
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Club</DialogTitle>
+          <DialogTitle>Edit Club</DialogTitle>
           <DialogDescription>
-            Add a new club to this season. EA ID and logo are optional.
+            Update info for <strong>{club.name}</strong>.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -108,11 +121,7 @@ const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
                       Club Name <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g. Club 1"
-                        type="text"
-                        {...field}
-                      />
+                      <Input type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,7 +165,7 @@ const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Add Club
+                Save
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -166,4 +175,4 @@ const AddClub = ({ leagueId, seasonId }: AddClubProps) => {
   )
 }
 
-export default AddClub
+export default EditClubGlobal
