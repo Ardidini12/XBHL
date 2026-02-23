@@ -421,6 +421,7 @@ export type SchedulerConfigCreate = {
     start_hour?: number;
     end_hour?: number;
     interval_minutes?: number;
+    interval_seconds?: number;
 };
 
 export type SchedulerConfigUpdate = {
@@ -428,6 +429,7 @@ export type SchedulerConfigUpdate = {
     start_hour?: (number | null);
     end_hour?: (number | null);
     interval_minutes?: (number | null);
+    interval_seconds?: (number | null);
 };
 
 export type SchedulerConfigPublic = {
@@ -439,6 +441,7 @@ export type SchedulerConfigPublic = {
     start_hour: number;
     end_hour: number;
     interval_minutes: number;
+    interval_seconds: number;
     created_at?: (string | null);
     updated_at?: (string | null);
 };
@@ -559,6 +562,16 @@ export type MatchesPublic = {
 };
 
 // Match request/response types
+export type MatchesGetAllMatchesData = {
+    skip?: number;
+    limit?: number;
+    seasonId?: string;
+    clubId?: string;
+    leagueId?: string;
+};
+
+export type MatchesGetAllMatchesResponse = MatchesPublic;
+
 export type MatchesGetClubMatchesData = {
     clubId: string;
     skip?: number;

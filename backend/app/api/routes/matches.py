@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, col, func, select
@@ -6,6 +7,7 @@ from sqlmodel import Session, col, func, select
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.models import (
     Club,
+    ClubSeasonRelationship,
     League,
     Match,
     MatchWithContext,
@@ -49,6 +51,48 @@ def _enrich_match(match: Match, session: Session, requesting_club_id: uuid.UUID)
         league_name=league.name if league else None,
         is_home=is_home,
         opponent_ea_id=opponent_ea_id,
+    )
+
+
+@router.get(
+    "/matches/",
+    response_model=MatchesPublic,
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def get_all_matches(
+    session: SessionDep,
+    skip: int = 0,
+    limit: int = 50,
+    season_id: Optional[uuid.UUID] = None,
+    club_id: Optional[uuid.UUID] = None,
+    league_id: Optional[uuid.UUID] = None,
+) -> MatchesPublic:
+    query = select(Match)
+
+    if league_id:
+        season_ids = session.exec(
+            select(Season.id).where(Season.league_id == league_id)
+        ).all()
+        if not season_ids:
+            return MatchesPublic(data=[], count=0)
+        query = query.where(col(Match.season_id).in_(season_ids))
+
+    if season_id:
+        query = query.where(Match.season_id == season_id)
+
+    if club_id:
+        query = query.where(Match.club_id == club_id)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    count = session.exec(count_query).one()
+
+    matches = session.exec(
+        query.order_by(col(Match.ea_timestamp).desc()).offset(skip).limit(limit)
+    ).all()
+
+    return MatchesPublic(
+        data=[_enrich_match(m, session, m.club_id) for m in matches],
+        count=count,
     )
 
 

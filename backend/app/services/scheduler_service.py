@@ -216,16 +216,20 @@ def _schedule_job(config: SchedulerConfig) -> None:
     if _scheduler.get_job(jid):
         _scheduler.remove_job(jid)
 
+    total_seconds = config.interval_minutes * 60 + getattr(config, "interval_seconds", 0)
     _scheduler.add_job(
         _run_fetch_job,
-        trigger=IntervalTrigger(minutes=config.interval_minutes),
+        trigger=IntervalTrigger(seconds=total_seconds),
         id=jid,
         args=[season_id_str],
         replace_existing=True,
         misfire_grace_time=60,
     )
     _job_registry[season_id_str] = jid
-    logger.info("Scheduled job for season %s every %s min.", config.season_id, config.interval_minutes)
+    logger.info(
+        "Scheduled job for season %s every %sm %ss.",
+        config.season_id, config.interval_minutes, getattr(config, "interval_seconds", 0),
+    )
 
 
 def start_scheduler(config: SchedulerConfig) -> None:

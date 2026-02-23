@@ -4,6 +4,7 @@ import { CalendarClock } from "lucide-react"
 
 import { SchedulersService, UsersService } from "@/client"
 import type { SchedulerConfigWithStatus } from "@/client"
+import { SchedulerConfigModal } from "@/components/Admin/SchedulerConfigModal"
 import { Badge } from "@/components/ui/badge"
 
 function getSchedulersQueryOptions() {
@@ -53,6 +54,11 @@ function formatDays(days: number[]): string {
     .sort((a, b) => a - b)
     .map((d) => names[d])
     .join(", ")
+}
+
+function formatInterval(minutes: number, seconds: number): string {
+  if (seconds > 0) return `${minutes}m ${seconds}s`
+  return `${minutes} min`
 }
 
 function formatTimestamp(ts: string | null | undefined): string {
@@ -119,6 +125,7 @@ function SchedulersTable() {
             <th className="text-right px-4 py-3 font-medium text-muted-foreground">
               Matches
             </th>
+            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -138,7 +145,7 @@ function SchedulersTable() {
                 {String(cfg.end_hour).padStart(2, "0")}:00
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {cfg.interval_minutes} min
+                {formatInterval(cfg.interval_minutes, cfg.interval_seconds ?? 0)}
               </td>
               <td className="px-4 py-3">{statusBadge(cfg)}</td>
               <td className="px-4 py-3 text-muted-foreground text-xs">
@@ -160,6 +167,9 @@ function SchedulersTable() {
               <td className="px-4 py-3 text-right font-mono">
                 {cfg.total_matches}
               </td>
+              <td className="px-4 py-3 text-right">
+                <SchedulerConfigModal seasonId={cfg.season_id} />
+              </td>
             </tr>
           ))}
         </tbody>
@@ -174,7 +184,7 @@ function SchedulersPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Schedulers</h1>
         <p className="text-muted-foreground">
-          Overview of all active EA data fetch schedulers
+          Overview of all active EA data fetch schedulers. Click the settings icon to configure any scheduler directly.
         </p>
       </div>
       <SchedulersTable />

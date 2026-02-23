@@ -263,6 +263,7 @@ class SchedulerConfig(SQLModel, table=True):
     start_hour: int = Field(default=18, ge=0, le=23)
     end_hour: int = Field(default=23, ge=0, le=23)
     interval_minutes: int = Field(default=30, ge=1)
+    interval_seconds: int = Field(default=0, ge=0, le=59)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -279,6 +280,7 @@ class SchedulerConfigCreate(SQLModel):
     start_hour: int = Field(default=18, ge=0, le=23)
     end_hour: int = Field(default=23, ge=0, le=23)
     interval_minutes: int = Field(default=30, ge=1)
+    interval_seconds: int = Field(default=0, ge=0, le=59)
 
 
 class SchedulerConfigUpdate(SQLModel):
@@ -286,6 +288,7 @@ class SchedulerConfigUpdate(SQLModel):
     start_hour: int | None = Field(default=None, ge=0, le=23)
     end_hour: int | None = Field(default=None, ge=0, le=23)
     interval_minutes: int | None = Field(default=None, ge=1)
+    interval_seconds: int | None = Field(default=None, ge=0, le=59)
 
 
 class SchedulerConfigPublic(SQLModel):
@@ -297,6 +300,7 @@ class SchedulerConfigPublic(SQLModel):
     start_hour: int
     end_hour: int
     interval_minutes: int
+    interval_seconds: int
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

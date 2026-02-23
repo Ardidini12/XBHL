@@ -64,6 +64,10 @@ const formSchema = z
       .number({ message: "Must be a number" })
       .min(1, { message: "Minimum 1 minute" })
       .max(1440, { message: "Maximum 1440 minutes" }),
+    interval_seconds: z
+      .number({ message: "Must be a number" })
+      .min(0, { message: "Minimum 0 seconds" })
+      .max(59, { message: "Maximum 59 seconds" }),
   })
   .refine((d) => Number(d.start_hour) < Number(d.end_hour), {
     message: "Start hour must be before end hour",
@@ -97,6 +101,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
       start_hour: "18",
       end_hour: "23",
       interval_minutes: 30,
+      interval_seconds: 0,
     },
   })
 
@@ -107,6 +112,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
         start_hour: String(existing.start_hour),
         end_hour: String(existing.end_hour),
         interval_minutes: existing.interval_minutes,
+        interval_seconds: existing.interval_seconds ?? 0,
       })
     }
   }, [existing, form])
@@ -118,6 +124,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
         start_hour: Number(data.start_hour),
         end_hour: Number(data.end_hour),
         interval_minutes: data.interval_minutes,
+        interval_seconds: data.interval_seconds,
       }
       if (hasConfig) {
         return SchedulersService.updateScheduler({
@@ -321,33 +328,58 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
             </div>
 
             {/* Interval */}
-            <FormField
-              control={form.control}
-              name="interval_minutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fetch Interval</FormLabel>
-                  <div className="flex items-center gap-2">
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={1440}
-                        className="w-28"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(Number(e.target.value))
-                        }
-                      />
-                    </FormControl>
-                    <span className="text-sm text-muted-foreground">
-                      minutes
-                    </span>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="interval_minutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Interval (min)</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={1440}
+                          className="w-24"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <span className="text-sm text-muted-foreground">min</span>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="interval_seconds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Interval (sec)</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          className="w-24"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <span className="text-sm text-muted-foreground">sec</span>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
               {/* Control buttons (only if config exists) */}
