@@ -1,5 +1,4 @@
-import { CalendarClock, Home, Trophy, Users } from "lucide-react"
-import { Home, ShieldHalf, Trophy, Users } from "lucide-react"
+import { CalendarClock, Home, ShieldHalf, Trophy, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
