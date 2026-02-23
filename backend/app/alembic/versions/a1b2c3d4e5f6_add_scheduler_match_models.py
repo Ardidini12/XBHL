@@ -1,8 +1,8 @@
 """add scheduler match models
 
-Revision ID: 526f79a65431
-Revises: c0757c482369
-Create Date: 2026-02-23 00:00:00.000000
+Revision ID: a1b2c3d4e5f6
+Revises: 526f79a65431
+Create Date: 2026-02-23 12:00:00.000000
 
 """
 from alembic import op
@@ -11,8 +11,8 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision = '526f79a65431'
-down_revision = 'c0757c482369'
+revision = 'a1b2c3d4e5f6'
+down_revision = '526f79a65431'
 branch_labels = None
 depends_on = None
 
