@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import login, matches, private, schedulers, users, utils, leagues, seasons, clubs
+from app.api.routes import login, matches, private, schedulers, users, utils, leagues, seasons, clubs, clubs_global
 from app.core.config import settings
 
 api_router = APIRouter()
