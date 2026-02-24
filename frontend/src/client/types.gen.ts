@@ -626,3 +626,110 @@ export type GlobalClubsAssignData = {
 };
 
 export type GlobalClubsAssignResponse = ClubPublic;
+
+// Player types
+export type PlayerPublic = {
+    id: string;
+    ea_player_id: string;
+    gamertag: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type PlayersPublic = {
+    data: Array<PlayerPublic>;
+    count: number;
+};
+
+export type PlayerMatchStatsPublic = {
+    id: string;
+    ea_player_id: string;
+    ea_match_id: string;
+    ea_timestamp?: (number | null);
+    match_id?: (string | null);
+    stat_class?: (number | null);
+    glbrksavepct?: (number | null);
+    glbrksaves?: (number | null);
+    glbrkshots?: (number | null);
+    gldsaves?: (number | null);
+    glga?: (number | null);
+    glgaa?: (number | null);
+    glpensavepct?: (number | null);
+    glpensaves?: (number | null);
+    glpenshots?: (number | null);
+    glpkclearzone?: (number | null);
+    glpokechecks?: (number | null);
+    glsavepct?: (number | null);
+    glsaves?: (number | null);
+    glshots?: (number | null);
+    glsoperiods?: (number | null);
+    is_guest?: (number | null);
+    opponent_club_id?: (string | null);
+    opponent_score?: (number | null);
+    opponent_team_id?: (string | null);
+    player_dnf?: (number | null);
+    player_level?: (number | null);
+    p_nhl_online_game_type?: (string | null);
+    position?: (string | null);
+    pos_sorted?: (number | null);
+    rating_defense?: (number | null);
+    rating_offense?: (number | null);
+    rating_teamplay?: (number | null);
+    score?: (number | null);
+    skassists?: (number | null);
+    skbs?: (number | null);
+    skdeflections?: (number | null);
+    skfol?: (number | null);
+    skfopct?: (number | null);
+    skfow?: (number | null);
+    skgiveaways?: (number | null);
+    skgoals?: (number | null);
+    skgwg?: (number | null);
+    skhits?: (number | null);
+    skinterceptions?: (number | null);
+    skpassattempts?: (number | null);
+    skpasses?: (number | null);
+    skpasspct?: (number | null);
+    skpenaltiesdrawn?: (number | null);
+    skpim?: (number | null);
+    skpkclearzone?: (number | null);
+    skplusmin?: (number | null);
+    skpossession?: (number | null);
+    skppg?: (number | null);
+    sksaucerpasses?: (number | null);
+    skshg?: (number | null);
+    skshotattempts?: (number | null);
+    skshotonnetpct?: (number | null);
+    skshotpct?: (number | null);
+    skshots?: (number | null);
+    sktakeaways?: (number | null);
+    team_id?: (string | null);
+    team_side?: (number | null);
+    toi?: (number | null);
+    toiseconds?: (number | null);
+    client_platform?: (string | null);
+    created_at?: (string | null);
+};
+
+export type PlayerDetailPublic = {
+    id: string;
+    ea_player_id: string;
+    gamertag: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    stats: Array<PlayerMatchStatsPublic>;
+};
+
+export type PlayersListPlayersData = {
+    skip?: number;
+    limit?: number;
+    search?: (string | null);
+};
+
+export type PlayersListPlayersResponse = PlayersPublic;
+
+export type PlayersGetPlayerData = {
+    eaPlayerId: string;
+};
+
+export type PlayersGetPlayerResponse = PlayerDetailPublic;

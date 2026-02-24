@@ -5,6 +5,8 @@ import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 import type { LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersCheckAvailabilityData, UsersCheckAvailabilityResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueByIdData, LeaguesReadLeagueByIdResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsGetSeasonData, SeasonsGetSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsAssignClubData, ClubsAssignClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, GlobalClubsReadAllData, GlobalClubsReadAllResponse, GlobalClubsCreateData, GlobalClubsCreateResponse, GlobalClubsReadOneData, GlobalClubsReadOneResponse, GlobalClubsUpdateData, GlobalClubsUpdateResponse, GlobalClubsDeleteData, GlobalClubsDeleteResponse, GlobalClubsAssignData, GlobalClubsAssignResponse, SchedulersListAllSchedulersResponse, SchedulersGetSchedulerData, SchedulersGetSchedulerResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SchedulersPauseSchedulerData, SchedulersPauseSchedulerResponse, SchedulersResumeSchedulerData, SchedulersResumeSchedulerResponse, SchedulersGetSchedulerRunsData, SchedulersGetSchedulerRunsResponse, MatchesGetAllMatchesData, MatchesGetAllMatchesResponse, MatchesGetClubMatchesData, MatchesGetClubMatchesResponse, MatchesGetSeasonMatchesData, MatchesGetSeasonMatchesResponse } from './types.gen';
 
+import type { PlayersListPlayersData, PlayersListPlayersResponse, PlayersGetPlayerData, PlayersGetPlayerResponse } from './types.gen';
+
 export class LoginService {
     /**
      * Login Access Token
@@ -731,6 +733,30 @@ export class MatchesService {
             url: '/api/v1/seasons/{season_id}/matches',
             path: { season_id: data.seasonId },
             query: { skip: data.skip, limit: data.limit },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+}
+
+export class PlayersService {
+    public static listPlayers(data: PlayersListPlayersData = {}): CancelablePromise<PlayersListPlayersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/players/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                search: data.search,
+            },
+            errors: { 422: 'Validation Error' }
+        });
+    }
+
+    public static getPlayer(data: PlayersGetPlayerData): CancelablePromise<PlayersGetPlayerResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/players/{ea_player_id}',
+            path: { ea_player_id: data.eaPlayerId },
             errors: { 422: 'Validation Error' }
         });
     }
