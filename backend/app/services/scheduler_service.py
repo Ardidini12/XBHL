@@ -1,7 +1,10 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
+
+NY_TZ = ZoneInfo("America/New_York")
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -53,10 +56,10 @@ async def _run_fetch_job(season_id_str: str) -> None:
             logger.info("Scheduler for season %s is inactive/paused — skipping.", season_id)
             return
 
-        # Check hour window
-        now_utc = datetime.now(timezone.utc)
-        current_hour = now_utc.hour
-        current_dow = now_utc.weekday()  # 0=Mon, 6=Sun
+        # Check hour window (all comparisons in America/New_York)
+        now_et = datetime.now(NY_TZ)
+        current_hour = now_et.hour
+        current_dow = now_et.weekday()  # 0=Mon, 6=Sun
 
         if config.days_of_week and current_dow not in config.days_of_week:
             logger.debug("Scheduler for season %s: not a scheduled day (%s).", season_id, current_dow)
@@ -127,7 +130,7 @@ async def _run_fetch_job(season_id_str: str) -> None:
             logger.exception("Scheduler job failed for season %s: %s", season_id, exc)
 
         finally:
-            run.finished_at = datetime.now(timezone.utc)
+            run.finished_at = datetime.now(NY_TZ)
             run.matches_fetched = matches_fetched
             run.matches_new = matches_new
             run.error_message = error_message
@@ -242,7 +245,7 @@ def start_scheduler(config: SchedulerConfig) -> None:
         if db_config:
             db_config.is_active = True
             db_config.is_paused = False
-            db_config.updated_at = datetime.now(timezone.utc)
+            db_config.updated_at = datetime.now(NY_TZ)
             session.add(db_config)
             session.commit()
             session.refresh(db_config)
@@ -263,7 +266,7 @@ def stop_scheduler(season_id: uuid.UUID) -> None:
         if config:
             config.is_active = False
             config.is_paused = False
-            config.updated_at = datetime.now(timezone.utc)
+            config.updated_at = datetime.now(NY_TZ)
             session.add(config)
             session.commit()
     logger.info("Stopped scheduler for season %s.", season_id)
@@ -282,7 +285,7 @@ def pause_scheduler(season_id: uuid.UUID) -> None:
         ).first()
         if config:
             config.is_paused = True
-            config.updated_at = datetime.now(timezone.utc)
+            config.updated_at = datetime.now(NY_TZ)
             session.add(config)
             session.commit()
     logger.info("Paused scheduler for season %s.", season_id)
@@ -310,7 +313,7 @@ def resume_scheduler(season_id: uuid.UUID) -> None:
         if config:
             config.is_paused = False
             config.is_active = True
-            config.updated_at = datetime.now(timezone.utc)
+            config.updated_at = datetime.now(NY_TZ)
             session.add(config)
             session.commit()
     logger.info("Resumed scheduler for season %s.", season_id)
@@ -377,7 +380,7 @@ def load_active_schedulers() -> None:
         ).all()
         for orphan in orphaned:
             orphan.status = SchedulerRunStatus.FAILED
-            orphan.finished_at = datetime.now(timezone.utc)
+            orphan.finished_at = datetime.now(NY_TZ)
             orphan.error_message = "Server restarted before run completed"
             session.add(orphan)
         if orphaned:

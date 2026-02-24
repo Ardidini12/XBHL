@@ -286,7 +286,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
                 name="start_hour"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Hour (UTC)</FormLabel>
+                    <FormLabel>Start Hour (ET)</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -310,7 +310,7 @@ export function SchedulerConfigModal({ seasonId }: SchedulerConfigModalProps) {
                 name="end_hour"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Hour (UTC)</FormLabel>
+                    <FormLabel>End Hour (ET)</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>

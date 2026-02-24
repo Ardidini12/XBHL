@@ -1,12 +1,19 @@
 # Active Context: XBHL
 
 ## Current Session
-- **Date**: 2026-02-23
-- **Focus**: Scheduler + Match backend + frontend (completed); Alembic chain fix
+- **Date**: 2026-02-24
+- **Focus**: Timezone enforcement — all times now America/New_York (ET) throughout
 
 ## Current Work State
 
 Scheduler, Match, and EA API client are fully implemented. The Alembic migration chain was broken (DB had revision `526f79a65431` which was missing locally) — recreated the file. Frontend client types and service classes for Schedulers and Matches have been added manually to `types.gen.ts` and `sdk.gen.ts`. All migration and client-gen commands are run by the user — never automatically.
+
+## What Was Just Done (This Session — 2026-02-24)
+1. **Timezone enforcement** — all times now `America/New_York` throughout:
+   - `scheduler_service.py` — hour/day-of-week window check now uses `ZoneInfo("America/New_York")` instead of UTC
+   - `SchedulerConfigModal.tsx` — labels changed from `Start/End Hour (UTC)` → `Start/End Hour (ET)`
+   - `schedulers.tsx` — column header `Window (UTC)` → `Window (ET)`; hour display appends ` ET`
+   - `seasonColumns.tsx` — replaced `date-fns format/parseISO` (browser-local) with `Intl` formatter using `timeZone: "America/New_York"`; column headers now `Start/End Date (ET)`
 
 ## What Was Just Done (Previous Session — 2026-02-21)
 1. **SchedulerConfig + SchedulerRun models** — added to `models.py`

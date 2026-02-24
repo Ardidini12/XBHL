@@ -1,15 +1,18 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from pydantic import EmailStr, model_validator
 from sqlalchemy import DateTime, JSON, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
+NY_TZ = ZoneInfo("America/New_York")
 
-def get_datetime_utc() -> datetime:
-    return datetime.now(timezone.utc)
+
+def get_datetime_et() -> datetime:
+    return datetime.now(NY_TZ)
 
 
 # Shared properties
@@ -55,7 +58,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
 
@@ -99,11 +102,11 @@ class LeagueUpdate(LeagueBase):
 class League(LeagueBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     updated_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     seasons: list["Season"] = Relationship(back_populates="league")
@@ -135,7 +138,7 @@ class SeasonUpdate(SQLModel):
 class Season(SeasonBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     start_date: datetime = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     end_date: datetime | None = Field(
@@ -143,11 +146,11 @@ class Season(SeasonBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     updated_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     league: League = Relationship(back_populates="seasons")
@@ -193,11 +196,11 @@ class ClubUpdate(SQLModel):
 class Club(ClubBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     updated_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     season_links: list["ClubSeasonRelationship"] = Relationship(back_populates="club")
@@ -265,11 +268,11 @@ class SchedulerConfig(SQLModel, table=True):
     interval_minutes: int = Field(default=30, ge=0)
     interval_seconds: int = Field(default=0, ge=0, le=59)
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     updated_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     runs: list["SchedulerRun"] = Relationship(back_populates="scheduler_config")
@@ -347,7 +350,7 @@ class Match(SQLModel, table=True):
     away_score: int | None = Field(default=None)
     raw_json: dict[str, Any] | None = Field(default=None, sa_type=JSON)
     created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
 
@@ -393,7 +396,7 @@ class SchedulerRun(SQLModel, table=True):
     )
     season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE")
     started_at: datetime = Field(
-        default_factory=get_datetime_utc,
+        default_factory=get_datetime_et,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     finished_at: datetime | None = Field(
