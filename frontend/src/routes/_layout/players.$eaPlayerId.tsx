@@ -241,6 +241,14 @@ function PlayerDetailPage() {
           </div>
         </div>
       )}
+
+      <div className="pt-2">
+        <Link to="/players">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to all players
+          </Button>
+        </Link>
+      </div>
     </div>
   )
 }

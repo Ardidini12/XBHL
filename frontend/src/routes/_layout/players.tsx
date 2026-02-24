@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router"
 import { ChevronLeft, ChevronRight, Search, UserRound } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { PlayersService, UsersService } from "@/client"
 import type { PlayerPublic } from "@/client"
@@ -36,6 +42,10 @@ function PlayersTable({
 }) {
   const [page, setPage] = useState(0)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setPage(0)
+  }, [search])
 
   const { data, isLoading, isFetching } = useQuery({
     queryFn: () =>
@@ -175,10 +185,17 @@ function PlayersPage() {
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    setSearch(searchInput)
-  }
+  const router = useRouterState()
+  const pathname = router.location.pathname
+  const isPlayerDetail =
+    pathname.startsWith("/players/") && pathname !== "/players"
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   function handleClear() {
     setSearchInput("")
@@ -187,41 +204,44 @@ function PlayersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Players</h1>
-        <p className="text-muted-foreground">
-          All players extracted from fetched match data
-        </p>
+      <div className={isPlayerDetail ? "hidden" : "flex flex-col gap-6"}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Players</h1>
+          <p className="text-muted-foreground">
+            All players extracted from fetched match data
+          </p>
+        </div>
+
+        <div className="flex gap-2 items-center max-w-sm">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder="Search gamertag..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          {searchInput && (
+            <Button type="button" variant="ghost" size="sm" onClick={handleClear}>
+              Clear
+            </Button>
+          )}
+        </div>
+
+        {search && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filtering by:</span>
+            <Badge variant="secondary">{search}</Badge>
+          </div>
+        )}
+
+        <PlayersTable search={search} />
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2 items-center max-w-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Search gamertag..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-        </div>
-        <Button type="submit" variant="outline" size="sm">
-          Search
-        </Button>
-        {search && (
-          <Button type="button" variant="ghost" size="sm" onClick={handleClear}>
-            Clear
-          </Button>
-        )}
-      </form>
-
-      {search && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Filtering by:</span>
-          <Badge variant="secondary">{search}</Badge>
-        </div>
-      )}
-
-      <PlayersTable search={search} />
+      <div className={isPlayerDetail ? "block" : "hidden"}>
+        <Outlet />
+      </div>
     </div>
   )
 }
