@@ -425,3 +425,202 @@ class SchedulerRunPublic(SQLModel):
 class SchedulerRunsPublic(SQLModel):
     data: list[SchedulerRunPublic]
     count: int
+
+
+# ---------------------------------------------------------------------------
+# Player Models
+# ---------------------------------------------------------------------------
+
+class Player(SQLModel, table=True):
+    __tablename__ = "player"  # type: ignore
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    ea_player_id: str = Field(unique=True, index=True, max_length=64)
+    gamertag: str = Field(index=True, max_length=255)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    stats: list["PlayerMatchStats"] = Relationship(back_populates="player")
+
+
+class PlayerPublic(SQLModel):
+    id: uuid.UUID
+    ea_player_id: str
+    gamertag: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class PlayersPublic(SQLModel):
+    data: list[PlayerPublic]
+    count: int
+
+
+# ---------------------------------------------------------------------------
+# PlayerMatchStats Model
+# ---------------------------------------------------------------------------
+
+class PlayerMatchStats(SQLModel, table=True):
+    __tablename__ = "player_match_stats"  # type: ignore
+    __table_args__ = (
+        UniqueConstraint("ea_player_id", "ea_match_id", name="uq_player_match_stats_player_match"),
+    )
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    player_id: uuid.UUID = Field(foreign_key="player.id", ondelete="CASCADE", index=True)
+    ea_player_id: str = Field(index=True, max_length=64)
+    ea_match_id: str = Field(index=True, max_length=64)
+    ea_timestamp: int | None = Field(default=None)
+    match_id: uuid.UUID | None = Field(default=None, foreign_key="match.id", ondelete="CASCADE")
+
+    # --- EA stat fields (all values arrive as strings from EA, cast on ingestion) ---
+    stat_class: int | None = Field(default=None)
+    glbrksavepct: float | None = Field(default=None)
+    glbrksaves: int | None = Field(default=None)
+    glbrkshots: int | None = Field(default=None)
+    gldsaves: int | None = Field(default=None)
+    glga: int | None = Field(default=None)
+    glgaa: float | None = Field(default=None)
+    glpensavepct: float | None = Field(default=None)
+    glpensaves: int | None = Field(default=None)
+    glpenshots: int | None = Field(default=None)
+    glpkclearzone: int | None = Field(default=None)
+    glpokechecks: int | None = Field(default=None)
+    glsavepct: float | None = Field(default=None)
+    glsaves: int | None = Field(default=None)
+    glshots: int | None = Field(default=None)
+    glsoperiods: int | None = Field(default=None)
+    is_guest: int | None = Field(default=None)
+    opponent_club_id: str | None = Field(default=None, max_length=64)
+    opponent_score: int | None = Field(default=None)
+    opponent_team_id: str | None = Field(default=None, max_length=64)
+    player_dnf: int | None = Field(default=None)
+    player_level: int | None = Field(default=None)
+    p_nhl_online_game_type: str | None = Field(default=None, max_length=32)
+    position: str | None = Field(default=None, max_length=64)
+    pos_sorted: int | None = Field(default=None)
+    rating_defense: float | None = Field(default=None)
+    rating_offense: float | None = Field(default=None)
+    rating_teamplay: float | None = Field(default=None)
+    score: int | None = Field(default=None)
+    skassists: int | None = Field(default=None)
+    skbs: int | None = Field(default=None)
+    skdeflections: int | None = Field(default=None)
+    skfol: int | None = Field(default=None)
+    skfopct: float | None = Field(default=None)
+    skfow: int | None = Field(default=None)
+    skgiveaways: int | None = Field(default=None)
+    skgoals: int | None = Field(default=None)
+    skgwg: int | None = Field(default=None)
+    skhits: int | None = Field(default=None)
+    skinterceptions: int | None = Field(default=None)
+    skpassattempts: int | None = Field(default=None)
+    skpasses: int | None = Field(default=None)
+    skpasspct: float | None = Field(default=None)
+    skpenaltiesdrawn: int | None = Field(default=None)
+    skpim: int | None = Field(default=None)
+    skpkclearzone: int | None = Field(default=None)
+    skplusmin: int | None = Field(default=None)
+    skpossession: int | None = Field(default=None)
+    skppg: int | None = Field(default=None)
+    sksaucerpasses: int | None = Field(default=None)
+    skshg: int | None = Field(default=None)
+    skshotattempts: int | None = Field(default=None)
+    skshotonnetpct: float | None = Field(default=None)
+    skshotpct: float | None = Field(default=None)
+    skshots: int | None = Field(default=None)
+    sktakeaways: int | None = Field(default=None)
+    team_id: str | None = Field(default=None, max_length=64)
+    team_side: int | None = Field(default=None)
+    toi: int | None = Field(default=None)
+    toiseconds: int | None = Field(default=None)
+    client_platform: str | None = Field(default=None, max_length=32)
+
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+    player: Player = Relationship(back_populates="stats")
+
+
+class PlayerMatchStatsPublic(SQLModel):
+    id: uuid.UUID
+    ea_player_id: str
+    ea_match_id: str
+    ea_timestamp: int | None = None
+    match_id: uuid.UUID | None = None
+    stat_class: int | None = None
+    glbrksavepct: float | None = None
+    glbrksaves: int | None = None
+    glbrkshots: int | None = None
+    gldsaves: int | None = None
+    glga: int | None = None
+    glgaa: float | None = None
+    glpensavepct: float | None = None
+    glpensaves: int | None = None
+    glpenshots: int | None = None
+    glpkclearzone: int | None = None
+    glpokechecks: int | None = None
+    glsavepct: float | None = None
+    glsaves: int | None = None
+    glshots: int | None = None
+    glsoperiods: int | None = None
+    is_guest: int | None = None
+    opponent_club_id: str | None = None
+    opponent_score: int | None = None
+    opponent_team_id: str | None = None
+    player_dnf: int | None = None
+    player_level: int | None = None
+    p_nhl_online_game_type: str | None = None
+    position: str | None = None
+    pos_sorted: int | None = None
+    rating_defense: float | None = None
+    rating_offense: float | None = None
+    rating_teamplay: float | None = None
+    score: int | None = None
+    skassists: int | None = None
+    skbs: int | None = None
+    skdeflections: int | None = None
+    skfol: int | None = None
+    skfopct: float | None = None
+    skfow: int | None = None
+    skgiveaways: int | None = None
+    skgoals: int | None = None
+    skgwg: int | None = None
+    skhits: int | None = None
+    skinterceptions: int | None = None
+    skpassattempts: int | None = None
+    skpasses: int | None = None
+    skpasspct: float | None = None
+    skpenaltiesdrawn: int | None = None
+    skpim: int | None = None
+    skpkclearzone: int | None = None
+    skplusmin: int | None = None
+    skpossession: int | None = None
+    skppg: int | None = None
+    sksaucerpasses: int | None = None
+    skshg: int | None = None
+    skshotattempts: int | None = None
+    skshotonnetpct: float | None = None
+    skshotpct: float | None = None
+    skshots: int | None = None
+    sktakeaways: int | None = None
+    team_id: str | None = None
+    team_side: int | None = None
+    toi: int | None = None
+    toiseconds: int | None = None
+    client_platform: str | None = None
+    created_at: datetime | None = None
+
+
+class PlayerDetailPublic(SQLModel):
+    id: uuid.UUID
+    ea_player_id: str
+    gamertag: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    stats: list[PlayerMatchStatsPublic] = []

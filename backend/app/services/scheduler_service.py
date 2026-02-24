@@ -15,6 +15,8 @@ from app.models import (
     Club,
     ClubSeasonRelationship,
     Match,
+    Player,
+    PlayerMatchStats,
     SchedulerConfig,
     SchedulerRun,
     SchedulerRunStatus,
@@ -224,10 +226,162 @@ def _store_match(
     session.add(match)
     try:
         session.commit()
+        session.refresh(match)
+        _extract_and_store_players(session, raw, match.id)
         return 1
     except Exception:
         session.rollback()
         return 0
+
+
+def _safe_int(v: Any) -> int | None:
+    if v is None:
+        return None
+    try:
+        return int(v)
+    except (ValueError, TypeError):
+        return None
+
+
+def _safe_float(v: Any) -> float | None:
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return None
+
+
+def _extract_and_store_players(
+    session: Session,
+    raw: dict[str, Any],
+    match_id: uuid.UUID,
+) -> None:
+    """
+    Extract all players from both clubs in a raw EA match dict.
+    Upserts Player rows and inserts PlayerMatchStats rows (deduped by ea_player_id + ea_match_id).
+    """
+    ea_match_id: str | None = raw.get("matchId")
+    ea_timestamp: int | None = raw.get("timestamp")
+
+    if not ea_match_id:
+        return
+
+    players_data: dict[str, Any] = raw.get("players") or {}
+
+    for _club_ea_id, players_in_club in players_data.items():
+        if not isinstance(players_in_club, dict):
+            continue
+
+        for ea_player_id_str, pdata in players_in_club.items():
+            if not isinstance(pdata, dict):
+                continue
+
+            gamertag: str = pdata.get("playername") or ea_player_id_str
+
+            # Upsert Player by ea_player_id
+            player = session.exec(
+                select(Player).where(Player.ea_player_id == ea_player_id_str)
+            ).first()
+
+            if not player:
+                player = Player(ea_player_id=ea_player_id_str, gamertag=gamertag)
+                session.add(player)
+                session.commit()
+                session.refresh(player)
+            elif player.gamertag != gamertag:
+                player.gamertag = gamertag
+                player.updated_at = datetime.now(timezone.utc)
+                session.add(player)
+                session.commit()
+
+            # Dedup: skip if stat row already exists
+            existing_stat = session.exec(
+                select(PlayerMatchStats).where(
+                    PlayerMatchStats.ea_player_id == ea_player_id_str,
+                    PlayerMatchStats.ea_match_id == ea_match_id,
+                )
+            ).first()
+            if existing_stat:
+                continue
+
+            stat = PlayerMatchStats(
+                player_id=player.id,
+                ea_player_id=ea_player_id_str,
+                ea_match_id=ea_match_id,
+                ea_timestamp=ea_timestamp,
+                match_id=match_id,
+                stat_class=_safe_int(pdata.get("class")),
+                glbrksavepct=_safe_float(pdata.get("glbrksavepct")),
+                glbrksaves=_safe_int(pdata.get("glbrksaves")),
+                glbrkshots=_safe_int(pdata.get("glbrkshots")),
+                gldsaves=_safe_int(pdata.get("gldsaves")),
+                glga=_safe_int(pdata.get("glga")),
+                glgaa=_safe_float(pdata.get("glgaa")),
+                glpensavepct=_safe_float(pdata.get("glpensavepct")),
+                glpensaves=_safe_int(pdata.get("glpensaves")),
+                glpenshots=_safe_int(pdata.get("glpenshots")),
+                glpkclearzone=_safe_int(pdata.get("glpkclearzone")),
+                glpokechecks=_safe_int(pdata.get("glpokechecks")),
+                glsavepct=_safe_float(pdata.get("glsavepct")),
+                glsaves=_safe_int(pdata.get("glsaves")),
+                glshots=_safe_int(pdata.get("glshots")),
+                glsoperiods=_safe_int(pdata.get("glsoperiods")),
+                is_guest=_safe_int(pdata.get("isGuest")),
+                opponent_club_id=pdata.get("opponentClubId"),
+                opponent_score=_safe_int(pdata.get("opponentScore")),
+                opponent_team_id=pdata.get("opponentTeamId"),
+                player_dnf=_safe_int(pdata.get("player_dnf")),
+                player_level=_safe_int(pdata.get("playerLevel")),
+                p_nhl_online_game_type=pdata.get("pNhlOnlineGameType"),
+                position=pdata.get("position"),
+                pos_sorted=_safe_int(pdata.get("posSorted")),
+                rating_defense=_safe_float(pdata.get("ratingDefense")),
+                rating_offense=_safe_float(pdata.get("ratingOffense")),
+                rating_teamplay=_safe_float(pdata.get("ratingTeamplay")),
+                score=_safe_int(pdata.get("score")),
+                skassists=_safe_int(pdata.get("skassists")),
+                skbs=_safe_int(pdata.get("skbs")),
+                skdeflections=_safe_int(pdata.get("skdeflections")),
+                skfol=_safe_int(pdata.get("skfol")),
+                skfopct=_safe_float(pdata.get("skfopct")),
+                skfow=_safe_int(pdata.get("skfow")),
+                skgiveaways=_safe_int(pdata.get("skgiveaways")),
+                skgoals=_safe_int(pdata.get("skgoals")),
+                skgwg=_safe_int(pdata.get("skgwg")),
+                skhits=_safe_int(pdata.get("skhits")),
+                skinterceptions=_safe_int(pdata.get("skinterceptions")),
+                skpassattempts=_safe_int(pdata.get("skpassattempts")),
+                skpasses=_safe_int(pdata.get("skpasses")),
+                skpasspct=_safe_float(pdata.get("skpasspct")),
+                skpenaltiesdrawn=_safe_int(pdata.get("skpenaltiesdrawn")),
+                skpim=_safe_int(pdata.get("skpim")),
+                skpkclearzone=_safe_int(pdata.get("skpkclearzone")),
+                skplusmin=_safe_int(pdata.get("skplusmin")),
+                skpossession=_safe_int(pdata.get("skpossession")),
+                skppg=_safe_int(pdata.get("skppg")),
+                sksaucerpasses=_safe_int(pdata.get("sksaucerpasses")),
+                skshg=_safe_int(pdata.get("skshg")),
+                skshotattempts=_safe_int(pdata.get("skshotattempts")),
+                skshotonnetpct=_safe_float(pdata.get("skshotonnetpct")),
+                skshotpct=_safe_float(pdata.get("skshotpct")),
+                skshots=_safe_int(pdata.get("skshots")),
+                sktakeaways=_safe_int(pdata.get("sktakeaways")),
+                team_id=pdata.get("teamId"),
+                team_side=_safe_int(pdata.get("teamSide")),
+                toi=_safe_int(pdata.get("toi")),
+                toiseconds=_safe_int(pdata.get("toiseconds")),
+                client_platform=pdata.get("clientPlatform"),
+            )
+            session.add(stat)
+            try:
+                session.commit()
+            except Exception:
+                session.rollback()
+                logger.warning(
+                    "Duplicate/failed player stat insert: player=%s match=%s",
+                    ea_player_id_str, ea_match_id,
+                )
 
 
 # ---------------------------------------------------------------------------

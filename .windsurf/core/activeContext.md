@@ -2,18 +2,32 @@
 
 ## Current Session
 - **Date**: 2026-02-24
-- **Focus**: Timezone enforcement — all times now America/New_York (ET) throughout
+- **Focus**: Players feature — full end-to-end implementation
 
 ## Current Work State
 
-Scheduler, Match, and EA API client are fully implemented. The Alembic migration chain was broken (DB had revision `526f79a65431` which was missing locally) — recreated the file. Frontend client types and service classes for Schedulers and Matches have been added manually to `types.gen.ts` and `sdk.gen.ts`. All migration and client-gen commands are run by the user — never automatically.
+Players feature fully implemented. New `Player` and `PlayerMatchStats` tables added. Scheduler now extracts all players from both teams on every new match fetch. Backend routes and frontend pages complete. Awaiting user to run migration + regenerate client + start dev server.
 
 ## What Was Just Done (This Session — 2026-02-24)
-1. **Timezone enforcement** — all times now `America/New_York` throughout:
-   - `scheduler_service.py` — hour/day-of-week window check now uses `ZoneInfo("America/New_York")` instead of UTC
-   - `SchedulerConfigModal.tsx` — labels changed from `Start/End Hour (UTC)` → `Start/End Hour (ET)`
-   - `schedulers.tsx` — column header `Window (UTC)` → `Window (ET)`; hour display appends `ET`
-   - `seasonColumns.tsx` — replaced `date-fns format/parseISO` (browser-local) with `Intl` formatter using `timeZone: "America/New_York"`; column headers now `Start/End Date (ET)`
+1. **`Player` model** — `player` table: id (UUID PK), ea_player_id (UNIQUE), gamertag, created_at, updated_at
+2. **`PlayerMatchStats` model** — `player_match_stats` table: 60+ EA stat columns, UNIQUE(ea_player_id, ea_match_id)
+3. **Player extraction** — `_extract_and_store_players()` added to `scheduler_service.py`; called after every new match insert; iterates both clubs' player arrays; upserts Player rows; inserts stat rows with deduplication
+4. **Players router** — `backend/app/api/routes/players.py`: `GET /players/` (list, gamertag search), `GET /players/{ea_player_id}` (detail with all match stats)
+5. **Alembic migration** — `c3d4e5f6a7b8_add_player_and_player_match_stats.py` (down_revision: b2c3d4e5f6a7)
+6. **Frontend types** — `PlayerPublic`, `PlayersPublic`, `PlayerMatchStatsPublic`, `PlayerDetailPublic` + request/response types added to `types.gen.ts`
+7. **Frontend service** — `PlayersService.listPlayers()` + `PlayersService.getPlayer()` added to `sdk.gen.ts`
+8. **Players list page** — `src/routes/_layout/players.tsx`: searchable, paginated table; click row → detail
+9. **Player detail page** — `src/routes/_layout/players.$eaPlayerId.tsx`: horizontally-scrollable stat table; columns grouped by CSV order (Overview, Shooting, Passing, Puck Control, Defense, Faceoffs, TOI, Goalie, Meta); sticky date + match ID columns
+10. **Sidebar** — Players link (UserRound icon) added after Matches
+
+## Immediate Next Steps (Priority Order)
+1. User runs: `alembic upgrade head` from `backend/`
+2. User runs: `bun run generate-client` from `frontend/`
+3. User starts dev server → `routeTree.gen.ts` auto-regenerates → all route lint errors resolve
+4. Test: run scheduler against a season with clubs → verify player rows populate
+
+## What Was Just Done (Previous Session — 2026-02-24 earlier)
+1. **Timezone enforcement** — all times now `America/New_York` throughout
 
 ## What Was Just Done (Previous Session — 2026-02-21)
 1. **SchedulerConfig + SchedulerRun models** — added to `models.py`
@@ -29,36 +43,20 @@ Scheduler, Match, and EA API client are fully implemented. The Alembic migration
 1. **Alembic chain fix** — recreated `526f79a65431_add_scheduler_match_models.py` (was applied to DB but file was lost)
 2. **Frontend client** — added Scheduler + Match types to `types.gen.ts`; added `SchedulersService` + `MatchesService` to `sdk.gen.ts`
 
-## Immediate Next Steps (Priority Order)
-
-### Backend
-1. **Run migration** — user must run `alembic upgrade head` from `backend/` to verify chain resolves (tables already exist in DB, so it should be a no-op)
-2. **Player model** — `Player` (id, gamertag UNIQUE, full_name, user_id FK nullable)
-3. **PlayerSeasonRelationship** join table
-4. **PlayerMatchHistory** join table
-
-### Frontend
-1. **Push to git + redeploy** — `routeTree.gen.ts` auto-regenerates on dev server start
-2. **SchedulerConfigModal integration** — wire into season detail page
-
 ## Open Questions / Decisions Pending
 - EA API platform parameter: `common-gen5` is set in `ea_client.py` — confirm this is correct for NHL 25
-- Player model: confirm if `club_id` FK is needed on Player or handled purely via match history
 
-## Recently Modified Files
-- `backend/app/models.py` — SchedulerConfig, SchedulerRun, Match models added
-- `backend/app/services/scheduler_service.py` — created
-- `backend/app/services/ea_client.py` — created
-- `backend/app/api/routes/schedulers.py` — created
-- `backend/app/api/routes/matches.py` — created
-- `backend/app/api/main.py` — schedulers + matches routers registered
-- `backend/app/main.py` — lifespan with APScheduler start/stop/load
-- `backend/app/alembic/versions/526f79a65431_add_scheduler_match_models.py` — recreated (chain fix)
-- `frontend/src/client/types.gen.ts` — Scheduler + Match types added
-- `frontend/src/client/sdk.gen.ts` — SchedulersService + MatchesService added
-- `frontend/src/components/Admin/SchedulerConfigModal.tsx` — created
-- `frontend/src/routes/_layout/schedulers.tsx` — created
-- `frontend/src/components/Sidebar/AppSidebar.tsx` — Schedulers link already present
+## Recently Modified Files (This Session)
+- `backend/app/models.py` — Player + PlayerMatchStats + Public schemas added
+- `backend/app/services/scheduler_service.py` — Player/PlayerMatchStats imported; _safe_int/_safe_float helpers; _extract_and_store_players() added; _store_match() hooks player extraction
+- `backend/app/api/routes/players.py` — NEW
+- `backend/app/api/main.py` — players router registered
+- `backend/app/alembic/versions/c3d4e5f6a7b8_add_player_and_player_match_stats.py` — NEW
+- `frontend/src/client/types.gen.ts` — Player types added
+- `frontend/src/client/sdk.gen.ts` — PlayersService added; player types import line added
+- `frontend/src/routes/_layout/players.tsx` — NEW
+- `frontend/src/routes/_layout/players.$eaPlayerId.tsx` — NEW
+- `frontend/src/components/Sidebar/AppSidebar.tsx` — Players link added
 
 ## Blockers
-None. User needs to run `alembic upgrade head` from `backend/` to verify migration chain.
+None. User must run 3 commands (see Immediate Next Steps above).
