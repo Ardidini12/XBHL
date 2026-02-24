@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from sqlmodel import Session, col, func, select
 
@@ -14,7 +13,6 @@ from app.models import (
     ClubSeasonRelationship, ClubSeasonHistory,
 )
 
-NY_TZ = ZoneInfo("America/New_York")
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
@@ -130,8 +128,8 @@ def get_season_by_id(*, session: Session, season_id: uuid.UUID) -> Season | None
 
 
 def end_season(*, session: Session, db_season: Season) -> Season:
-    db_season.end_date = datetime.now(NY_TZ)
-    db_season.updated_at = datetime.now(NY_TZ)
+    db_season.end_date = datetime.now(timezone.utc)
+    db_season.updated_at = datetime.now(timezone.utc)
     session.add(db_season)
     session.commit()
     session.refresh(db_season)
@@ -141,7 +139,7 @@ def end_season(*, session: Session, db_season: Season) -> Season:
 def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdate) -> Season:
     season_data = season_in.model_dump(exclude_unset=True)
     db_season.sqlmodel_update(season_data)
-    db_season.updated_at = datetime.now(NY_TZ)
+    db_season.updated_at = datetime.now(timezone.utc)
     session.add(db_season)
     session.commit()
     session.refresh(db_season)
@@ -231,7 +229,7 @@ def remove_club_from_season(
 def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Club:
     club_data = club_in.model_dump(exclude_unset=True)
     db_club.sqlmodel_update(club_data)
-    db_club.updated_at = datetime.now(NY_TZ)
+    db_club.updated_at = datetime.now(timezone.utc)
     session.add(db_club)
     session.commit()
     session.refresh(db_club)

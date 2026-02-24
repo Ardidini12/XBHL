@@ -1,11 +1,8 @@
 import uuid
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, col, func, select
-
-NY_TZ = ZoneInfo("America/New_York")
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import (
@@ -149,7 +146,7 @@ def update_scheduler(
 
     update_data = payload.model_dump(exclude_unset=True)
     config.sqlmodel_update(update_data)
-    config.updated_at = datetime.now(NY_TZ)
+    config.updated_at = datetime.now(timezone.utc)
     session.add(config)
     session.commit()
     session.refresh(config)

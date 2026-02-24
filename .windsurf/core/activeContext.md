@@ -12,7 +12,7 @@ Scheduler, Match, and EA API client are fully implemented. The Alembic migration
 1. **Timezone enforcement** — all times now `America/New_York` throughout:
    - `scheduler_service.py` — hour/day-of-week window check now uses `ZoneInfo("America/New_York")` instead of UTC
    - `SchedulerConfigModal.tsx` — labels changed from `Start/End Hour (UTC)` → `Start/End Hour (ET)`
-   - `schedulers.tsx` — column header `Window (UTC)` → `Window (ET)`; hour display appends ` ET`
+   - `schedulers.tsx` — column header `Window (UTC)` → `Window (ET)`; hour display appends `ET`
    - `seasonColumns.tsx` — replaced `date-fns format/parseISO` (browser-local) with `Intl` formatter using `timeZone: "America/New_York"`; column headers now `Start/End Date (ET)`
 
 ## What Was Just Done (Previous Session — 2026-02-21)
