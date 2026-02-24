@@ -111,7 +111,7 @@ function SchedulersTable() {
               Days
             </th>
             <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-              Window (UTC)
+              Window (ET)
             </th>
             <th className="text-left px-4 py-3 font-medium text-muted-foreground">
               Interval
@@ -142,7 +142,7 @@ function SchedulersTable() {
               </td>
               <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                 {String(cfg.start_hour).padStart(2, "0")}:00 –{" "}
-                {String(cfg.end_hour).padStart(2, "0")}:00
+                {String(cfg.end_hour).padStart(2, "0")}:00 ET
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {formatInterval(cfg.interval_minutes, cfg.interval_seconds ?? 0)}

@@ -1,6 +1,7 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -15,6 +16,8 @@ from app.models import (
     Message,
     Season,
 )
+
+NY_TZ = ZoneInfo("America/New_York")
 
 router = APIRouter(prefix="/clubs", tags=["clubs"])
 
@@ -140,7 +143,7 @@ def assign_club_to_season(
     season = session.get(Season, season_id)
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
-    if season.end_date is not None and season.end_date <= datetime.now(timezone.utc):
+    if season.end_date is not None and season.end_date <= datetime.now(NY_TZ):
         raise HTTPException(status_code=409, detail="Season is closed and no longer accepting clubs.")
     crud.add_club_to_season(session=session, club_id=club_id, season_id=season_id)
     return crud.build_club_public(session=session, club=db_club)
