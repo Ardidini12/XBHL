@@ -14,6 +14,13 @@ import { User } from "./User"
 
 const baseItems: Item[] = [{ icon: Home, title: "Dashboard", path: "/" }]
 
+/**
+ * Render the application sidebar with navigation, appearance controls, and the current user panel.
+ *
+ * When the authenticated user is a superuser, additional admin navigation entries are included.
+ *
+ * @returns The sidebar JSX element containing header, navigation items, appearance controls, and the user panel
+ */
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 

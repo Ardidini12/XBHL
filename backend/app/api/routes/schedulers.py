@@ -26,6 +26,16 @@ router = APIRouter(tags=["schedulers"])
 def _enrich_config(
     config: SchedulerConfig, session: Session
 ) -> SchedulerConfigWithStatus:
+    """
+    Enriches a SchedulerConfig with runtime status and related season and league metadata.
+    
+    Parameters:
+        config (SchedulerConfig): Scheduler configuration to enrich.
+        session (Session): Database session used to load related entities and counts.
+    
+    Returns:
+        SchedulerConfigWithStatus: The original configuration augmented with season and league names (when available), last run timestamp and status (when available), total number of matches for the season, and whether the scheduler job is currently running.
+    """
     season = session.get(Season, config.season_id)
     league = session.get(League, season.league_id) if season else None
 
@@ -72,6 +82,14 @@ def _enrich_config(
     dependencies=[Depends(get_current_active_superuser)],
 )
 def list_all_schedulers(session: SessionDep) -> list[SchedulerConfigWithStatus]:
+    """
+    Return all scheduler configurations enriched with runtime status and related metadata.
+    
+    Each returned item includes the scheduler config plus derived fields such as season and league names, the most recent run details, total match count for the season, and whether the scheduler job is currently running.
+    
+    Returns:
+        A list of SchedulerConfigWithStatus objects, each enriched with season/league names, last run information, total matches, and running status.
+    """
     configs = session.exec(select(SchedulerConfig)).all()
     return [_enrich_config(c, session) for c in configs]
 
@@ -86,6 +104,15 @@ def list_all_schedulers(session: SessionDep) -> list[SchedulerConfigWithStatus]:
     dependencies=[Depends(get_current_active_superuser)],
 )
 def get_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfigWithStatus:
+    """
+    Retrieve the scheduler configuration for the given season, enriched with runtime status and related metadata.
+    
+    Returns:
+        SchedulerConfigWithStatus: Scheduler configuration augmented with season and league names, last run details, total match count, and current running/paused status.
+    
+    Raises:
+        HTTPException: 404 if no scheduler configuration exists for the provided season_id.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -104,6 +131,20 @@ def create_scheduler(
     payload: SchedulerConfigCreate,
     session: SessionDep,
 ) -> SchedulerConfigPublic:
+    """
+    Create a scheduler configuration for the given season.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season to attach the new scheduler to.
+        payload (SchedulerConfigCreate): Scheduling settings to create (days_of_week, start_hour, end_hour, interval_minutes).
+    
+    Returns:
+        SchedulerConfigPublic: Public representation of the newly created scheduler configuration.
+    
+    Raises:
+        HTTPException: 404 if the season does not exist.
+        HTTPException: 409 if a scheduler already exists for the season.
+    """
     season = session.get(Season, season_id)
     if not season:
         raise HTTPException(status_code=404, detail="Season not found.")
@@ -137,6 +178,19 @@ def update_scheduler(
     payload: SchedulerConfigUpdate,
     session: SessionDep,
 ) -> SchedulerConfigPublic:
+    """
+    Apply partial updates to the scheduler configuration for a given season and persist the changes.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler configuration will be updated.
+        payload (SchedulerConfigUpdate): Update payload; only fields set in this object are applied.
+    
+    Returns:
+        SchedulerConfigPublic: The updated scheduler configuration in its public representation.
+    
+    Raises:
+        HTTPException: 404 if no scheduler configuration exists for the given season_id.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -163,6 +217,18 @@ def update_scheduler(
     dependencies=[Depends(get_current_active_superuser)],
 )
 def delete_scheduler(season_id: uuid.UUID, session: SessionDep) -> Message:
+    """
+    Delete the scheduler configuration for a given season.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler configuration should be deleted.
+    
+    Returns:
+        Message: Confirmation message indicating the scheduler was deleted.
+    
+    Raises:
+        HTTPException: If no scheduler configuration exists for the provided `season_id` (404).
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -178,6 +244,18 @@ def delete_scheduler(season_id: uuid.UUID, session: SessionDep) -> Message:
     dependencies=[Depends(get_current_active_superuser)],
 )
 def start_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfigPublic:
+    """
+    Start the scheduler for the given season and return its public configuration.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler will be started.
+    
+    Returns:
+        SchedulerConfigPublic: Public representation of the scheduler config after starting.
+    
+    Raises:
+        HTTPException: 404 if no scheduler config exists for the given season_id.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -194,6 +272,18 @@ def start_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfi
     dependencies=[Depends(get_current_active_superuser)],
 )
 def stop_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfigPublic:
+    """
+    Stop the scheduler for the given season and return its public configuration.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler should be stopped.
+    
+    Returns:
+        SchedulerConfigPublic: Public representation of the scheduler configuration after the scheduler has been stopped.
+    
+    Raises:
+        HTTPException: 404 if no scheduler config exists for the provided season_id.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -210,6 +300,19 @@ def stop_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfig
     dependencies=[Depends(get_current_active_superuser)],
 )
 def pause_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfigPublic:
+    """
+    Pause the active scheduler for the given season.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler should be paused.
+    
+    Raises:
+        HTTPException: 404 if no scheduler config exists for the season.
+        HTTPException: 400 if the scheduler exists but is not active.
+    
+    Returns:
+        SchedulerConfigPublic: Updated public representation of the scheduler configuration after pausing.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -228,6 +331,17 @@ def pause_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfi
     dependencies=[Depends(get_current_active_superuser)],
 )
 def resume_scheduler(season_id: uuid.UUID, session: SessionDep) -> SchedulerConfigPublic:
+    """
+    Resume the scheduler for the given season.
+    
+    Resumes a paused or stopped scheduler associated with the provided season ID and returns the updated public scheduler configuration.
+    
+    Returns:
+        SchedulerConfigPublic: Public representation of the scheduler configuration after resuming.
+    
+    Raises:
+        HTTPException: Raised with status code 404 if no SchedulerConfig exists for the given `season_id`.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()
@@ -249,6 +363,20 @@ def get_scheduler_runs(
     skip: int = 0,
     limit: int = 50,
 ) -> SchedulerRunsPublic:
+    """
+    Retrieve paginated scheduler runs for the scheduler configuration associated with a given season.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler configuration's runs are requested.
+        skip (int): Number of runs to skip (pagination offset).
+        limit (int): Maximum number of runs to return.
+    
+    Returns:
+        SchedulerRunsPublic: Object containing `data` (list of SchedulerRun records) and `count` (total number of runs for the scheduler config).
+    
+    Raises:
+        HTTPException: 404 if no scheduler configuration exists for the provided season_id.
+    """
     config = session.exec(
         select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
     ).first()

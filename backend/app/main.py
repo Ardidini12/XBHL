@@ -12,11 +12,25 @@ from app.services.scheduler_service import get_scheduler, load_active_schedulers
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
+    """
+    Constructs a unique identifier for an API route by concatenating its first tag and its route name with a hyphen.
+    
+    Parameters:
+    	route (APIRoute): The route whose first tag and name are used to build the identifier.
+    
+    Returns:
+    	str: Identifier in the form "firstTag-routeName", e.g. "users-get_user".
+    """
     return f"{route.tags[0]}-{route.name}"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Manage application lifespan: start the scheduler and load active schedulers on startup, then shut down the scheduler on shutdown.
+    
+    This async context manager is used by FastAPI to perform startup tasks (start the shared scheduler and load any active scheduled jobs) and to perform teardown (shutdown the scheduler without waiting) when the application stops.
+    """
     scheduler = get_scheduler()
     scheduler.start()
     load_active_schedulers()

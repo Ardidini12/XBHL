@@ -17,6 +17,22 @@ router = APIRouter(tags=["matches"])
 
 
 def _enrich_match(match: Match, session: Session, requesting_club_id: uuid.UUID) -> MatchWithContext:
+    """
+    Builds a MatchWithContext combining core match data with season/league names and opponent context for a requesting club.
+    
+    Parameters:
+        match (Match): The Match record to enrich.
+        session (Session): Database session used to load related Season, League, and Club.
+        requesting_club_id (uuid.UUID): ID of the club used to determine home/away status and opponent EA id.
+    
+    Returns:
+        MatchWithContext: An object containing the match's core fields (id, ea_match_id, ea_timestamp, season_id, club_id,
+        home_club_ea_id, away_club_ea_id, home_score, away_score, created_at) plus:
+          - season_name: season.name if the season exists, otherwise None
+          - league_name: league.name if the league exists, otherwise None
+          - is_home: True if the requesting club is the home team, False if the away team, None if undeterminable
+          - opponent_ea_id: EA id of the opposing club when determinable, otherwise None
+    """
     season = session.get(Season, match.season_id)
     league = session.get(League, season.league_id) if season else None
 
@@ -63,6 +79,20 @@ def get_club_matches(
     skip: int = 0,
     limit: int = 100,
 ) -> MatchesPublic:
+    """
+    Retrieve paginated matches for a club enriched with season and league context.
+    
+    Parameters:
+    	club_id (uuid.UUID): ID of the club whose matches will be returned.
+    	skip (int): Number of items to skip for pagination.
+    	limit (int): Maximum number of items to return.
+    
+    Returns:
+    	MatchesPublic: An object with `data` containing a list of MatchWithContext entries (matches enriched with season_name, league_name, is_home, and opponent_ea_id) and `count` containing the total number of matches for the club.
+    
+    Raises:
+    	HTTPException: Raised with status code 404 if the club is not found.
+    """
     club = session.get(Club, club_id)
     if not club:
         raise HTTPException(status_code=404, detail="Club not found.")
@@ -98,6 +128,20 @@ def get_season_matches(
     skip: int = 0,
     limit: int = 100,
 ) -> MatchesPublic:
+    """
+    Retrieve paginated matches for a season enriched with contextual data.
+    
+    Parameters:
+        season_id (uuid.UUID): UUID of the season whose matches should be retrieved.
+        skip (int): Number of records to skip for pagination.
+        limit (int): Maximum number of records to return.
+    
+    Returns:
+        MatchesPublic: An object containing `data` (list of enriched matches with season and league context, home/away flag, and opponent EA ID) and `count` (total number of matches for the season).
+    
+    Raises:
+        HTTPException: 404 if the specified season does not exist.
+    """
     season = session.get(Season, season_id)
     if not season:
         raise HTTPException(status_code=404, detail="Season not found.")

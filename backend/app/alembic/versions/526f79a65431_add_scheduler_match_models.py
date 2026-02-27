@@ -18,6 +18,15 @@ depends_on = None
 
 
 def upgrade():
+    """
+    Create the scheduler_config, scheduler_run, and match tables and an index used by the scheduler feature.
+    
+    Creates:
+    - scheduler_config with UUID primary key, season FK (on delete CASCADE), activity/pausing flags, scheduling fields (days_of_week, start_hour, end_hour, interval_minutes), timestamps, and a unique constraint on season_id.
+    - scheduler_run with UUID primary key, FK to scheduler_config and season (both on delete CASCADE), run timestamps, status, match counters, and optional error_message.
+    - match with UUID primary key, EA identifiers, timestamps, FKs to season and club (both on delete CASCADE), optional scores and raw_json, and a unique constraint on (ea_match_id, ea_timestamp).
+    Also creates a non-unique index on match.ea_match_id.
+    """
     op.create_table(
         'scheduler_config',
         sa.Column('id', sa.Uuid(), nullable=False),
@@ -71,6 +80,11 @@ def upgrade():
 
 
 def downgrade():
+    """
+    Revert the migration by removing the scheduler and match database objects created in upgrade.
+    
+    This drops the index ix_match_ea_match_id on the match table, then removes the match, scheduler_run, and scheduler_config tables (in that order).
+    """
     op.drop_index('ix_match_ea_match_id', table_name='match')
     op.drop_table('match')
     op.drop_table('scheduler_run')

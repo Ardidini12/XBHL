@@ -29,10 +29,22 @@ _job_registry: dict[str, str] = {}
 
 
 def get_scheduler() -> AsyncIOScheduler:
+    """
+    Get the module's shared AsyncIOScheduler instance.
+    
+    Returns:
+        scheduler (AsyncIOScheduler): The global scheduler used to schedule and manage jobs.
+    """
     return _scheduler
 
 
 def _job_id(season_id: uuid.UUID) -> str:
+    """
+    Builds a deterministic APScheduler job identifier for a season.
+    
+    Returns:
+        A string in the form "season_<season_uuid>" representing the job ID.
+    """
     return f"season_{season_id}"
 
 
@@ -41,7 +53,14 @@ def _job_id(season_id: uuid.UUID) -> str:
 # ---------------------------------------------------------------------------
 
 async def _run_fetch_job(season_id_str: str) -> None:
-    """APScheduler calls this. Fetches EA matches for all clubs in the season."""
+    """
+    Execute a scheduled fetch of EA matches for every club in the given season.
+    
+    Runs a single scheduler cycle: validates the SchedulerConfig for the season (active, not paused, within configured days/hours), creates a SchedulerRun audit record, resolves/updates club EA IDs, fetches matches from the EA API, and persists new Match records. On completion the SchedulerRun is updated with finished timestamp, totals (matches_fetched, matches_new), status (SUCCESS or FAILED), and an optional error_message.
+    
+    Parameters:
+        season_id_str (str): Season UUID as a string (provided by APScheduler).
+    """
     season_id = uuid.UUID(season_id_str)
 
     with Session(engine) as session:
@@ -142,9 +161,15 @@ def _store_match(
     club_id: uuid.UUID,
 ) -> int:
     """
-    Parse one raw EA match dict and insert if not already stored.
-    Returns 1 if inserted, 0 if duplicate or skipped.
-    All fields are treated as nullable.
+    Insert a Match record from a raw EA match payload if it is not already stored.
+    
+    If the payload lacks an `matchId` or `timestamp`, the function skips insertion. Deduplication is performed using the combination of `ea_match_id`, `ea_timestamp`, and the provided `club_id`.
+    
+    Parameters:
+        raw (dict[str, Any]): Raw EA match dictionary; expected keys include `"matchId"`, `"timestamp"`, and `"clubs"` where `"clubs"` is a mapping of club EA IDs to per-club data containing `"teamSide"` and `"score"`.
+    
+    Returns:
+        int: `1` if a new Match was inserted, `0` if the match was skipped or a duplicate.
     """
     ea_match_id: str | None = raw.get("matchId")
     ea_timestamp: int | None = raw.get("timestamp")
@@ -209,7 +234,14 @@ def _store_match(
 # ---------------------------------------------------------------------------
 
 def _schedule_job(config: SchedulerConfig) -> None:
-    """Add or replace an APScheduler job for a given config."""
+    """
+    Create or replace the periodic APScheduler job that runs fetches for the config's season.
+    
+    Schedules a job using the config's interval_minutes and stores the job id in the in-memory registry keyed by the season id.
+    
+    Parameters:
+        config (SchedulerConfig): Scheduler configuration for a season; its `season_id` is used to name the job and `interval_minutes` determines the job interval.
+    """
     jid = _job_id(config.season_id)
     season_id_str = str(config.season_id)
 
@@ -229,7 +261,12 @@ def _schedule_job(config: SchedulerConfig) -> None:
 
 
 def start_scheduler(config: SchedulerConfig) -> None:
-    """Mark config active, schedule the job."""
+    """
+    Activate the given scheduler configuration, clear its paused state, persist the update, and schedule its job.
+    
+    Parameters:
+        config (SchedulerConfig): Scheduler configuration to activate and schedule.
+    """
     with Session(engine) as session:
         db_config = session.get(SchedulerConfig, config.id)
         if db_config:
@@ -243,7 +280,14 @@ def start_scheduler(config: SchedulerConfig) -> None:
 
 
 def stop_scheduler(season_id: uuid.UUID) -> None:
-    """Stop job, mark config inactive (preserves config)."""
+    """
+    Stop the scheduler for a season and mark its SchedulerConfig inactive while keeping the config record.
+    
+    Removes any scheduled APScheduler job for the given season and updates the corresponding SchedulerConfig to set is_active = False and is_paused = False, updating the config's timestamp.
+    
+    Parameters:
+        season_id (uuid.UUID): ID of the season whose scheduler should be stopped.
+    """
     jid = _job_id(season_id)
     if _scheduler.get_job(jid):
         _scheduler.remove_job(jid)
@@ -263,7 +307,14 @@ def stop_scheduler(season_id: uuid.UUID) -> None:
 
 
 def pause_scheduler(season_id: uuid.UUID) -> None:
-    """Pause job (job stays registered but hour-check will skip it)."""
+    """
+    Pause the scheduler job for a season.
+    
+    Sets the SchedulerConfig.is_paused flag to True and leaves the scheduled job registered (future runs will be skipped by the job's runtime checks).
+    
+    Parameters:
+        season_id (uuid.UUID): UUID of the season whose scheduler job should be paused.
+    """
     jid = _job_id(season_id)
     job = _scheduler.get_job(jid)
     if job:
@@ -282,7 +333,14 @@ def pause_scheduler(season_id: uuid.UUID) -> None:
 
 
 def resume_scheduler(season_id: uuid.UUID) -> None:
-    """Resume a paused job."""
+    """
+    Resume and ensure scheduling for the job associated with the given season.
+    
+    If an APScheduler job exists for the season, resume it; if the job was removed, re-create it from the stored SchedulerConfig. Updates the SchedulerConfig to set `is_paused = False`, `is_active = True`, and refreshes `updated_at` to the current UTC time.
+    
+    Parameters:
+        season_id (uuid.UUID): UUID of the season whose scheduler should be resumed.
+    """
     jid = _job_id(season_id)
     job = _scheduler.get_job(jid)
     if job:
@@ -310,7 +368,12 @@ def resume_scheduler(season_id: uuid.UUID) -> None:
 
 
 def delete_scheduler(season_id: uuid.UUID) -> None:
-    """Stop job and delete config + runs from DB."""
+    """
+    Stop the scheduler for a season and remove its configuration and runs from the database.
+    
+    Parameters:
+        season_id (uuid.UUID): UUID of the season whose scheduler and associated records should be removed.
+    """
     stop_scheduler(season_id)
     with Session(engine) as session:
         config = session.exec(
@@ -323,12 +386,25 @@ def delete_scheduler(season_id: uuid.UUID) -> None:
 
 
 def restart_scheduler(config: SchedulerConfig) -> None:
-    """Stop existing job and start fresh with updated config."""
+    """
+    Restart the scheduler for the season described by `config`.
+    
+    Stops any existing job for `config.season_id` and schedules a new job using the provided SchedulerConfig.
+    
+    Parameters:
+        config (SchedulerConfig): Configuration containing the season_id and scheduling settings to apply.
+    """
     stop_scheduler(config.season_id)
     start_scheduler(config)
 
 
 def is_job_running(season_id: uuid.UUID) -> bool:
+    """
+    Determine whether a scheduler job for the given season has a next run scheduled.
+    
+    Returns:
+        True if a job exists for the season and has a scheduled `next_run_time`, False otherwise.
+    """
     jid = _job_id(season_id)
     job = _scheduler.get_job(jid)
     return job is not None and not getattr(job, "next_run_time", None) is None

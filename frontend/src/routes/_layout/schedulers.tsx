@@ -6,6 +6,11 @@ import { SchedulersService, UsersService } from "@/client"
 import type { SchedulerConfigWithStatus } from "@/client"
 import { Badge } from "@/components/ui/badge"
 
+/**
+ * Create query options for retrieving the list of schedulers.
+ *
+ * @returns An options object with `queryFn` that calls `SchedulersService.listAllSchedulers()`, `queryKey` set to `["schedulers"]`, and `staleTime` set to 30000 (30 seconds)
+ */
 function getSchedulersQueryOptions() {
   return {
     queryFn: () => SchedulersService.listAllSchedulers(),
@@ -32,6 +37,12 @@ export const Route = createFileRoute("/_layout/schedulers")({
   }),
 })
 
+/**
+ * Render a badge representing the scheduler's current status.
+ *
+ * @param cfg - Scheduler configuration whose `is_active` and `is_paused` flags determine the badge
+ * @returns A Badge element: `Stopped` when `cfg.is_active` is false, `Paused` when `cfg.is_paused` is true, otherwise `Running`
+ */
 function statusBadge(cfg: SchedulerConfigWithStatus) {
   if (!cfg.is_active)
     return <Badge variant="secondary">Stopped</Badge>
@@ -44,6 +55,12 @@ function statusBadge(cfg: SchedulerConfigWithStatus) {
   return <Badge className="bg-green-600 text-white">Running</Badge>
 }
 
+/**
+ * Format an array of weekday indices into a human-readable string.
+ *
+ * @param days - Array of weekday indices where `0` = Monday and `6` = Sunday; may be `null` or empty.
+ * @returns `—` if `days` is empty or falsy, `Every day` if it contains all seven days, otherwise a comma-separated list of three-letter day abbreviations (e.g., `Mon, Wed, Fri`).
+ */
 function formatDays(days: number[]): string {
   const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   if (!days || days.length === 0) return "—"
@@ -55,6 +72,12 @@ function formatDays(days: number[]): string {
     .join(", ")
 }
 
+/**
+ * Format a timestamp into a human-readable date/time string in the America/New_York timezone.
+ *
+ * @param ts - An ISO timestamp string (or null/undefined to indicate no timestamp)
+ * @returns A string with short month, day, hour, minute and short timezone name (en-US, America/New_York), or "—" if `ts` is null or undefined
+ */
 function formatTimestamp(ts: string | null | undefined): string {
   if (!ts) return "—"
   return new Date(ts).toLocaleString("en-US", {
@@ -67,6 +90,15 @@ function formatTimestamp(ts: string | null | undefined): string {
   })
 }
 
+/**
+ * Renders a table of scheduler configurations, including loading and empty states.
+ *
+ * Displays scheduler rows with season, league, days, UTC window, interval, status badge,
+ * last run (with optional status), and total matches. If data is loading shows a
+ * centered loading message; if no schedulers are present shows an empty-state hint.
+ *
+ * @returns The table element showing scheduler data, or a loading/empty placeholder element.
+ */
 function SchedulersTable() {
   const { data, isLoading } = useQuery(getSchedulersQueryOptions())
 
@@ -168,6 +200,11 @@ function SchedulersTable() {
   )
 }
 
+/**
+ * Page component that renders the Schedulers header and the schedulers table.
+ *
+ * @returns A JSX element containing the page title, subtitle, and the <SchedulersTable /> layout.
+ */
 function SchedulersPage() {
   return (
     <div className="flex flex-col gap-6">
