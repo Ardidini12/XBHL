@@ -91,7 +91,12 @@ async def _run_fetch_job(season_id_str: str) -> None:
             logger.debug("Scheduler for season %s: not a scheduled day (%s).", season_id, current_dow)
             return
 
-        if not (config.start_hour <= current_hour < config.end_hour):
+        # Support midnight wrap-around (e.g. start=23, end=1 means 23:00–01:00)
+        if config.start_hour <= config.end_hour:
+            in_window = config.start_hour <= current_hour < config.end_hour
+        else:
+            in_window = current_hour >= config.start_hour or current_hour < config.end_hour
+        if not in_window:
             logger.debug(
                 "Scheduler for season %s: outside active hours (%s–%s), current=%s.",
                 season_id, config.start_hour, config.end_hour, current_hour,
@@ -231,7 +236,7 @@ def _store_match(
     try:
         session.commit()
         session.refresh(match)
-        _extract_and_store_players(session, raw, match.id)
+        _extract_and_store_players(session, raw, match.id, season_id)
         return 1
     except Exception:
         session.rollback()
@@ -260,6 +265,7 @@ def _extract_and_store_players(
     session: Session,
     raw: dict[str, Any],
     match_id: uuid.UUID,
+    season_id: uuid.UUID,
 ) -> None:
     """
     Extract all players from both clubs in a raw EA match dict.
@@ -315,6 +321,7 @@ def _extract_and_store_players(
                 ea_match_id=ea_match_id,
                 ea_timestamp=ea_timestamp,
                 match_id=match_id,
+                season_id=season_id,
                 stat_class=_safe_int(pdata.get("class")),
                 glbrksavepct=_safe_float(pdata.get("glbrksavepct")),
                 glbrksaves=_safe_int(pdata.get("glbrksaves")),

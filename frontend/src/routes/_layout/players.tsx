@@ -2,32 +2,22 @@ import { useQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
   Outlet,
-  redirect,
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router"
 import { ChevronLeft, ChevronRight, Search, UserRound } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { PlayersService, UsersService } from "@/client"
+import { PlayersService } from "@/client"
 import type { PlayerPublic } from "@/client"
+import { ensureSuperuser } from "@/lib/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export const Route = createFileRoute("/_layout/players")({
   component: PlayersPage,
-  beforeLoad: async () => {
-    try {
-      const user = await UsersService.readUserMe()
-      if (!user.is_superuser) {
-        throw redirect({ to: "/" })
-      }
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e
-      throw redirect({ to: "/" })
-    }
-  },
+  beforeLoad: ensureSuperuser,
   head: () => ({
     meta: [{ title: "Players - XBHL" }],
   }),

@@ -494,6 +494,7 @@ class PlayerMatchStats(SQLModel, table=True):
     ea_match_id: str = Field(index=True, max_length=64)
     ea_timestamp: int | None = Field(default=None)
     match_id: uuid.UUID | None = Field(default=None, foreign_key="match.id", ondelete="CASCADE")
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id", ondelete="CASCADE", index=True)
 
     # --- EA stat fields (all values arrive as strings from EA, cast on ingestion) ---
     stat_class: int | None = Field(default=None)
@@ -572,6 +573,7 @@ class PlayerMatchStatsPublic(SQLModel):
     ea_match_id: str
     ea_timestamp: int | None = None
     match_id: uuid.UUID | None = None
+    season_id: uuid.UUID | None = None
     stat_class: int | None = None
     glbrksavepct: float | None = None
     glbrksaves: int | None = None
@@ -636,10 +638,81 @@ class PlayerMatchStatsPublic(SQLModel):
     created_at: datetime | None = None
 
 
+class PlayerStatTotals(SQLModel):
+    games_played: int = 0
+    goals: int = 0
+    assists: int = 0
+    points: int = 0
+    plus_minus: int = 0
+    hits: int = 0
+    shots: int = 0
+    shot_pct: float = 0.0
+    pim: int = 0
+    takeaways: int = 0
+    giveaways: int = 0
+    faceoff_wins: int = 0
+    faceoff_losses: int = 0
+    faceoff_pct: float = 0.0
+    toi_seconds: int = 0
+    blocked_shots: int = 0
+    interceptions: int = 0
+    pass_attempts: int = 0
+    passes_completed: int = 0
+    pass_pct: float = 0.0
+    gwg: int = 0
+    ppg: int = 0
+    shg: int = 0
+    deflections: int = 0
+    shot_attempts: int = 0
+    saucer_passes: int = 0
+    penalties_drawn: int = 0
+    pk_clear_zone: int = 0
+    possession: int = 0
+    # Goalie
+    gl_saves: int = 0
+    gl_ga: int = 0
+    gl_shots: int = 0
+    gl_save_pct: float = 0.0
+    gl_so_periods: int = 0
+    gl_brk_saves: int = 0
+    gl_brk_shots: int = 0
+    gl_pen_saves: int = 0
+    gl_pen_shots: int = 0
+    gl_poke_checks: int = 0
+    gl_pk_clear_zone: int = 0
+    gl_dsaves: int = 0
+
+
+class PlayerSeasonGroup(SQLModel):
+    season_id: uuid.UUID
+    season_name: str
+    league_id: uuid.UUID
+    league_name: str
+    stats: list[PlayerMatchStatsPublic] = []
+    totals: PlayerStatTotals = PlayerStatTotals()
+
+
+class PlayerLeagueGroup(SQLModel):
+    league_id: uuid.UUID
+    league_name: str
+    seasons: list[PlayerSeasonGroup] = []
+    totals: PlayerStatTotals = PlayerStatTotals()
+
+
+class PlayerFilterOption(SQLModel):
+    id: uuid.UUID
+    name: str
+    league_id: uuid.UUID | None = None
+    league_name: str | None = None
+
+
 class PlayerDetailPublic(SQLModel):
     id: uuid.UUID
     ea_player_id: str
     gamertag: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    stats: list[PlayerMatchStatsPublic] = []
+    available_seasons: list[PlayerFilterOption] = []
+    available_leagues: list[PlayerFilterOption] = []
+    leagues: list[PlayerLeagueGroup] = []
+    career_totals: PlayerStatTotals = PlayerStatTotals()

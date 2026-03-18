@@ -647,6 +647,7 @@ export type PlayerMatchStatsPublic = {
     ea_match_id: string;
     ea_timestamp?: (number | null);
     match_id?: (string | null);
+    season_id?: (string | null);
     stat_class?: (number | null);
     glbrksavepct?: (number | null);
     glbrksaves?: (number | null);
@@ -711,13 +712,83 @@ export type PlayerMatchStatsPublic = {
     created_at?: (string | null);
 };
 
+export type PlayerStatTotals = {
+    games_played: number;
+    goals: number;
+    assists: number;
+    points: number;
+    plus_minus: number;
+    hits: number;
+    shots: number;
+    shot_pct: number;
+    pim: number;
+    takeaways: number;
+    giveaways: number;
+    faceoff_wins: number;
+    faceoff_losses: number;
+    faceoff_pct: number;
+    toi_seconds: number;
+    blocked_shots: number;
+    interceptions: number;
+    pass_attempts: number;
+    passes_completed: number;
+    pass_pct: number;
+    gwg: number;
+    ppg: number;
+    shg: number;
+    deflections: number;
+    shot_attempts: number;
+    saucer_passes: number;
+    penalties_drawn: number;
+    pk_clear_zone: number;
+    possession: number;
+    gl_saves: number;
+    gl_ga: number;
+    gl_shots: number;
+    gl_save_pct: number;
+    gl_so_periods: number;
+    gl_brk_saves: number;
+    gl_brk_shots: number;
+    gl_pen_saves: number;
+    gl_pen_shots: number;
+    gl_poke_checks: number;
+    gl_pk_clear_zone: number;
+    gl_dsaves: number;
+};
+
+export type PlayerSeasonGroup = {
+    season_id: string;
+    season_name: string;
+    league_id: string;
+    league_name: string;
+    stats: Array<PlayerMatchStatsPublic>;
+    totals: PlayerStatTotals;
+};
+
+export type PlayerLeagueGroup = {
+    league_id: string;
+    league_name: string;
+    seasons: Array<PlayerSeasonGroup>;
+    totals: PlayerStatTotals;
+};
+
+export type PlayerFilterOption = {
+    id: string;
+    name: string;
+    league_id?: (string | null);
+    league_name?: (string | null);
+};
+
 export type PlayerDetailPublic = {
     id: string;
     ea_player_id: string;
     gamertag: string;
     created_at?: (string | null);
     updated_at?: (string | null);
-    stats: Array<PlayerMatchStatsPublic>;
+    available_seasons: Array<PlayerFilterOption>;
+    available_leagues: Array<PlayerFilterOption>;
+    leagues: Array<PlayerLeagueGroup>;
+    career_totals: PlayerStatTotals;
 };
 
 export type PlayersListPlayersData = {
@@ -730,6 +801,8 @@ export type PlayersListPlayersResponse = PlayersPublic;
 
 export type PlayersGetPlayerData = {
     eaPlayerId: string;
+    seasonId?: (string | null);
+    leagueId?: (string | null);
 };
 
 export type PlayersGetPlayerResponse = PlayerDetailPublic;

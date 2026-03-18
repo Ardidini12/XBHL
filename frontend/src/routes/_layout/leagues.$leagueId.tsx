@@ -3,14 +3,14 @@ import {
   createFileRoute,
   Link,
   Outlet,
-  redirect,
   useParams,
   useRouterState,
 } from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
 import { Suspense } from "react"
 
-import { LeaguesService, SeasonsService, UsersService } from "@/client"
+import { LeaguesService, SeasonsService } from "@/client"
+import { ensureSuperuser } from "@/lib/auth-guard"
 import AddSeason from "@/components/Admin/AddSeason"
 import { seasonColumns } from "@/components/Admin/seasonColumns"
 import { DataTable } from "@/components/Common/DataTable"
@@ -35,17 +35,7 @@ export function getLeagueQueryOptions(leagueId: string) {
 
 export const Route = createFileRoute("/_layout/leagues/$leagueId")({
   component: LeagueDetail,
-  beforeLoad: async () => {
-    try {
-      const user = await UsersService.readUserMe()
-      if (!user.is_superuser) {
-        throw redirect({ to: "/" })
-      }
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e
-      throw redirect({ to: "/" })
-    }
-  },
+  beforeLoad: ensureSuperuser,
   head: () => ({
     meta: [{ title: "League - XBHL" }],
   }),

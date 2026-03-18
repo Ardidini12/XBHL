@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { CalendarClock } from "lucide-react"
 
-import { SchedulersService, UsersService } from "@/client"
+import { SchedulersService } from "@/client"
 import type { SchedulerConfigWithStatus } from "@/client"
+import { ensureSuperuser } from "@/lib/auth-guard"
 import { SchedulerConfigModal } from "@/components/Admin/SchedulerConfigModal"
 import { Badge } from "@/components/ui/badge"
 
@@ -17,17 +18,7 @@ function getSchedulersQueryOptions() {
 
 export const Route = createFileRoute("/_layout/schedulers")({
   component: SchedulersPage,
-  beforeLoad: async () => {
-    try {
-      const user = await UsersService.readUserMe()
-      if (!user.is_superuser) {
-        throw redirect({ to: "/" })
-      }
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e
-      throw redirect({ to: "/" })
-    }
-  },
+  beforeLoad: ensureSuperuser,
   head: () => ({
     meta: [{ title: "Schedulers - XBHL" }],
   }),

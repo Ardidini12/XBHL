@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { ChevronLeft, ChevronRight, Swords } from "lucide-react"
 import { useState } from "react"
 
@@ -8,9 +8,9 @@ import {
   LeaguesService,
   MatchesService,
   SeasonsService,
-  UsersService,
 } from "@/client"
 import type { MatchWithContext } from "@/client"
+import { ensureSuperuser } from "@/lib/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,17 +23,7 @@ import {
 
 export const Route = createFileRoute("/_layout/matches")({
   component: MatchesPage,
-  beforeLoad: async () => {
-    try {
-      const user = await UsersService.readUserMe()
-      if (!user.is_superuser) {
-        throw redirect({ to: "/" })
-      }
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e
-      throw redirect({ to: "/" })
-    }
-  },
+  beforeLoad: ensureSuperuser,
   head: () => ({
     meta: [{ title: "Matches - XBHL" }],
   }),

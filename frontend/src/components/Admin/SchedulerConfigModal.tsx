@@ -69,8 +69,8 @@ const formSchema = z
       .min(0, { message: "Minimum 0 seconds" })
       .max(59, { message: "Maximum 59 seconds" }),
   })
-  .refine((d) => Number(d.start_hour) < Number(d.end_hour), {
-    message: "Start hour must be before end hour",
+  .refine((d) => Number(d.start_hour) !== Number(d.end_hour), {
+    message: "Start and end hour cannot be the same",
     path: ["end_hour"],
   })
   .refine((d) => d.interval_minutes * 60 + d.interval_seconds >= 1, {

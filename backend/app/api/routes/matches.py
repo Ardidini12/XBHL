@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, col, func, select
@@ -7,7 +6,6 @@ from sqlmodel import Session, col, func, select
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.models import (
     Club,
-    ClubSeasonRelationship,
     League,
     Match,
     MatchWithContext,
@@ -18,40 +16,74 @@ from app.models import (
 router = APIRouter(tags=["matches"])
 
 
-def _enrich_match(match: Match, session: Session, requesting_club_id: uuid.UUID) -> MatchWithContext:
-    season = session.get(Season, match.season_id)
-    league = session.get(League, season.league_id) if season else None
+def _enrich_matches(matches: list[Match], session: Session) -> list[MatchWithContext]:
+    if not matches:
+        return []
 
-    club = session.get(Club, requesting_club_id)
-    club_ea_id = club.ea_id if club else None
+    # Batch-load all referenced seasons, leagues, and clubs
+    season_ids = {m.season_id for m in matches}
+    club_ids = {m.club_id for m in matches}
 
-    is_home: bool | None = None
-    opponent_ea_id: str | None = None
+    season_map: dict[uuid.UUID, Season] = {}
+    league_map: dict[uuid.UUID, League] = {}
 
-    if club_ea_id and match.home_club_ea_id and match.away_club_ea_id:
-        if club_ea_id == match.home_club_ea_id:
-            is_home = True
-            opponent_ea_id = match.away_club_ea_id
-        elif club_ea_id == match.away_club_ea_id:
-            is_home = False
-            opponent_ea_id = match.home_club_ea_id
+    if season_ids:
+        seasons = session.exec(
+            select(Season).where(col(Season.id).in_(list(season_ids)))
+        ).all()
+        for sn in seasons:
+            season_map[sn.id] = sn
 
-    return MatchWithContext(
-        id=match.id,
-        ea_match_id=match.ea_match_id,
-        ea_timestamp=match.ea_timestamp,
-        season_id=match.season_id,
-        club_id=match.club_id,
-        home_club_ea_id=match.home_club_ea_id,
-        away_club_ea_id=match.away_club_ea_id,
-        home_score=match.home_score,
-        away_score=match.away_score,
-        created_at=match.created_at,
-        season_name=season.name if season else None,
-        league_name=league.name if league else None,
-        is_home=is_home,
-        opponent_ea_id=opponent_ea_id,
-    )
+        league_ids = {sn.league_id for sn in seasons}
+        if league_ids:
+            leagues = session.exec(
+                select(League).where(col(League.id).in_(list(league_ids)))
+            ).all()
+            for lg in leagues:
+                league_map[lg.id] = lg
+
+    club_map: dict[uuid.UUID, Club] = {}
+    if club_ids:
+        clubs = session.exec(
+            select(Club).where(col(Club.id).in_(list(club_ids)))
+        ).all()
+        for c in clubs:
+            club_map[c.id] = c
+
+    result: list[MatchWithContext] = []
+    for m in matches:
+        sn = season_map.get(m.season_id)
+        lg = league_map.get(sn.league_id) if sn else None
+        club = club_map.get(m.club_id)
+        club_ea_id = club.ea_id if club else None
+
+        is_home: bool | None = None
+        opponent_ea_id: str | None = None
+        if club_ea_id and m.home_club_ea_id and m.away_club_ea_id:
+            if club_ea_id == m.home_club_ea_id:
+                is_home = True
+                opponent_ea_id = m.away_club_ea_id
+            elif club_ea_id == m.away_club_ea_id:
+                is_home = False
+                opponent_ea_id = m.home_club_ea_id
+
+        result.append(MatchWithContext(
+            id=m.id,
+            ea_match_id=m.ea_match_id,
+            ea_timestamp=m.ea_timestamp,
+            season_id=m.season_id,
+            club_id=m.club_id,
+            home_club_ea_id=m.home_club_ea_id,
+            away_club_ea_id=m.away_club_ea_id,
+            home_score=m.home_score,
+            away_score=m.away_score,
+            created_at=m.created_at,
+            season_name=sn.name if sn else None,
+            league_name=lg.name if lg else None,
+            is_home=is_home,
+            opponent_ea_id=opponent_ea_id,
+        ))
+    return result
 
 
 @router.get(
@@ -63,9 +95,9 @@ def get_all_matches(
     session: SessionDep,
     skip: int = 0,
     limit: int = 50,
-    season_id: Optional[uuid.UUID] = None,
-    club_id: Optional[uuid.UUID] = None,
-    league_id: Optional[uuid.UUID] = None,
+    season_id: uuid.UUID | None = None,
+    club_id: uuid.UUID | None = None,
+    league_id: uuid.UUID | None = None,
 ) -> MatchesPublic:
     query = select(Match)
 
@@ -91,7 +123,7 @@ def get_all_matches(
     ).all()
 
     return MatchesPublic(
-        data=[_enrich_match(m, session, m.club_id) for m in matches],
+        data=_enrich_matches(list(matches), session),
         count=count,
     )
 
@@ -126,7 +158,7 @@ def get_club_matches(
     ).all()
 
     return MatchesPublic(
-        data=[_enrich_match(m, session, club_id) for m in matches],
+        data=_enrich_matches(list(matches), session),
         count=count,
     )
 
@@ -161,6 +193,6 @@ def get_season_matches(
     ).all()
 
     return MatchesPublic(
-        data=[_enrich_match(m, session, m.club_id) for m in matches],
+        data=_enrich_matches(list(matches), session),
         count=count,
     )

@@ -757,6 +757,10 @@ export class PlayersService {
             method: 'GET',
             url: '/api/v1/players/{ea_player_id}',
             path: { ea_player_id: data.eaPlayerId },
+            query: {
+                season_id: data.seasonId,
+                league_id: data.leagueId,
+            },
             errors: { 422: 'Validation Error' }
         });
     }
