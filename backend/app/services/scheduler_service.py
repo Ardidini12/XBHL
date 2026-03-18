@@ -6,12 +6,16 @@ from zoneinfo import ZoneInfo
 
 NY_TZ = ZoneInfo("America/New_York")
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from sqlmodel import Session, col, select
+from apscheduler.schedulers.asyncio import (  # ty:ignore[unresolved-import]  # noqa: E402
+    AsyncIOScheduler,
+)
+from apscheduler.triggers.interval import (  # ty:ignore[unresolved-import]  # noqa: E402
+    IntervalTrigger,
+)
+from sqlmodel import Session, col, select  # ty:ignore[unresolved-import]  # noqa: E402
 
-from app.core.db import engine
-from app.models import (
+from app.core.db import engine  # noqa: E402
+from app.models import (  # noqa: E402
     Club,
     ClubSeasonRelationship,
     Match,
@@ -22,7 +26,7 @@ from app.models import (
     SchedulerRunStatus,
     Season,
 )
-from app.services import ea_client
+from app.services import ea_client  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -501,6 +505,15 @@ def delete_scheduler(season_id: uuid.UUID) -> None:
             select(SchedulerConfig).where(SchedulerConfig.season_id == season_id)
         ).first()
         if config:
+            # Explicitly delete runs first to avoid NOT NULL violation
+            # (SQLAlchemy may try SET NULL before DB CASCADE fires)
+            runs = session.exec(
+                select(SchedulerRun).where(
+                    SchedulerRun.scheduler_config_id == config.id
+                )
+            ).all()
+            for run in runs:
+                session.delete(run)
             session.delete(config)
             session.commit()
     logger.info("Deleted scheduler config for season %s.", season_id)
@@ -515,7 +528,7 @@ def restart_scheduler(config: SchedulerConfig) -> None:
 def is_job_running(season_id: uuid.UUID) -> bool:
     jid = _job_id(season_id)
     job = _scheduler.get_job(jid)
-    return job is not None and not getattr(job, "next_run_time", None) is None
+    return job is not None and getattr(job, "next_run_time", None) is not None
 
 
 # ---------------------------------------------------------------------------

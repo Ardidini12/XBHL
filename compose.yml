@@ -1,7 +1,9 @@
+name: xbhl
+
 services:
 
   prestart:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}-prestart:${TAG-latest}'
     build:
       context: .
       dockerfile: backend/Dockerfile

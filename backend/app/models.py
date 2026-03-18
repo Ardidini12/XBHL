@@ -4,9 +4,9 @@ from enum import Enum
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import EmailStr, model_validator
-from sqlalchemy import DateTime, JSON, UniqueConstraint
-from sqlmodel import Field, Relationship, SQLModel
+from pydantic import EmailStr, model_validator  # ty:ignore[unresolved-import]
+from sqlalchemy import JSON, DateTime, UniqueConstraint  # ty:ignore[unresolved-import]
+from sqlmodel import Field, Relationship, SQLModel  # ty:ignore[unresolved-import]
 
 NY_TZ = ZoneInfo("America/New_York")
 
@@ -29,15 +29,15 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
 
 
-class UserRegister(SQLModel):   
+class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=128)
     full_name: str | None = Field(default=None, max_length=255)
-    gamertag: str = Field(unique=True, index=True, max_length=255) 
+    gamertag: str = Field(unique=True, index=True, max_length=255)
 
 # Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore
+    email: EmailStr | None = Field(default=None, max_length=255)
     password: str | None = Field(default=None, min_length=8, max_length=128)
     gamertag: str | None = Field(default=None, max_length=255)
 
@@ -59,7 +59,7 @@ class User(UserBase, table=True):
     hashed_password: str
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
 # Properties to return via API, id is always required
@@ -103,14 +103,17 @@ class League(LeagueBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
-    seasons: list["Season"] = Relationship(back_populates="league")
-    
+    seasons: list["Season"] = Relationship(
+        back_populates="league",
+        cascade_delete=True,
+        sa_relationship_kwargs={"passive_deletes": True},
+    )
 
 # Properties to return via API, id is always required
 class LeaguePublic(LeagueBase):
@@ -130,7 +133,7 @@ class SeasonBase(SQLModel):
     league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE")
 
 class SeasonCreate(SeasonBase):
-    pass  
+    pass
 
 class SeasonUpdate(SQLModel):
     name: str | None = Field(default=None, max_length=255)
@@ -139,22 +142,26 @@ class Season(SeasonBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     start_date: datetime = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     end_date: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     league: League = Relationship(back_populates="seasons")
-    club_links: list["ClubSeasonRelationship"] = Relationship(back_populates="season")
+    club_links: list["ClubSeasonRelationship"] = Relationship(
+        back_populates="season",
+        cascade_delete=True,
+        sa_relationship_kwargs={"passive_deletes": True},
+    )
 
 class SeasonPublic(SeasonBase):
     id: uuid.UUID
@@ -197,13 +204,17 @@ class Club(ClubBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
-    season_links: list["ClubSeasonRelationship"] = Relationship(back_populates="club")
+    season_links: list["ClubSeasonRelationship"] = Relationship(
+        back_populates="club",
+        cascade_delete=True,
+        sa_relationship_kwargs={"passive_deletes": True},
+    )
 
 class ClubPublic(ClubBase):
     id: uuid.UUID
@@ -220,7 +231,7 @@ class ClubsPublic(SQLModel):
 # Club–Season join table
 
 class ClubSeasonRelationship(SQLModel, table=True):
-    __tablename__ = "club_season"  # type: ignore
+    __tablename__ = "club_season"
     club_id: uuid.UUID = Field(
         foreign_key="club.id", primary_key=True, ondelete="CASCADE"
     )
@@ -255,7 +266,7 @@ class NewPassword(SQLModel):
 # SchedulerConfig Model
 
 class SchedulerConfig(SQLModel, table=True):
-    __tablename__ = "scheduler_config"  # type: ignore
+    __tablename__ = "scheduler_config"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     season_id: uuid.UUID = Field(
         foreign_key="season.id", unique=True, ondelete="CASCADE"
@@ -269,13 +280,17 @@ class SchedulerConfig(SQLModel, table=True):
     interval_seconds: int = Field(default=0, ge=0, le=59)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
-    runs: list["SchedulerRun"] = Relationship(back_populates="scheduler_config")
+    runs: list["SchedulerRun"] = Relationship(
+        back_populates="scheduler_config",
+        cascade_delete=True,
+        sa_relationship_kwargs={"passive_deletes": True},
+    )
 
 
 class SchedulerConfigCreate(SQLModel):
@@ -335,7 +350,7 @@ class SchedulerConfigWithStatus(SchedulerConfigPublic):
 # Match Model
 
 class Match(SQLModel, table=True):
-    __tablename__ = "match"  # type: ignore
+    __tablename__ = "match"
     __table_args__ = (
         UniqueConstraint("ea_match_id", "ea_timestamp", name="uq_match_ea_match_id_timestamp"),
     )
@@ -351,7 +366,7 @@ class Match(SQLModel, table=True):
     raw_json: dict[str, Any] | None = Field(default=None, sa_type=JSON)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
 
@@ -389,7 +404,7 @@ class SchedulerRunStatus(str, Enum):
 
 
 class SchedulerRun(SQLModel, table=True):
-    __tablename__ = "scheduler_run"  # type: ignore
+    __tablename__ = "scheduler_run"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     scheduler_config_id: uuid.UUID = Field(
         foreign_key="scheduler_config.id", ondelete="CASCADE"
@@ -397,11 +412,11 @@ class SchedulerRun(SQLModel, table=True):
     season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE")
     started_at: datetime = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     finished_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     status: SchedulerRunStatus = Field(default=SchedulerRunStatus.RUNNING)
     matches_fetched: int = Field(default=0)
@@ -432,19 +447,23 @@ class SchedulerRunsPublic(SQLModel):
 # ---------------------------------------------------------------------------
 
 class Player(SQLModel, table=True):
-    __tablename__ = "player"  # type: ignore
+    __tablename__ = "player"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     ea_player_id: str = Field(unique=True, index=True, max_length=64)
     gamertag: str = Field(index=True, max_length=255)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
     updated_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
-    stats: list["PlayerMatchStats"] = Relationship(back_populates="player")
+    stats: list["PlayerMatchStats"] = Relationship(
+        back_populates="player",
+        cascade_delete=True,
+        sa_relationship_kwargs={"passive_deletes": True},
+    )
 
 
 class PlayerPublic(SQLModel):
@@ -465,7 +484,7 @@ class PlayersPublic(SQLModel):
 # ---------------------------------------------------------------------------
 
 class PlayerMatchStats(SQLModel, table=True):
-    __tablename__ = "player_match_stats"  # type: ignore
+    __tablename__ = "player_match_stats"
     __table_args__ = (
         UniqueConstraint("ea_player_id", "ea_match_id", name="uq_player_match_stats_player_match"),
     )
@@ -541,7 +560,7 @@ class PlayerMatchStats(SQLModel, table=True):
 
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
+        sa_type=DateTime(timezone=True),
     )
 
     player: Player = Relationship(back_populates="stats")
