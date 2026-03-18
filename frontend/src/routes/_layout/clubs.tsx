@@ -12,7 +12,7 @@ function getGlobalClubsQueryOptions() {
   return {
     queryFn: () => GlobalClubsService.readAllClubs({ skip: 0, limit: 500 }),
     queryKey: ["clubs-global"],
-    staleTime: 1000 * 60,
+    staleTime: 5 * 60 * 1000,
   }
 }
 

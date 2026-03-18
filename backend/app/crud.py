@@ -14,6 +14,50 @@ from app.models import (
 )
 
 
+def _build_history_batch(
+    *,
+    session: Session,
+    club_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, list[ClubSeasonHistory]]:
+    """Fetch all season history for a set of clubs in O(3) queries."""
+    if not club_ids:
+        return {}
+    links = session.exec(
+        select(ClubSeasonRelationship).where(
+            col(ClubSeasonRelationship.club_id).in_(club_ids)
+        )
+    ).all()
+    if not links:
+        return {}
+    season_ids = list({lnk.season_id for lnk in links})
+    seasons_list = session.exec(
+        select(Season).where(col(Season.id).in_(season_ids))
+    ).all()
+    season_map = {s.id: s for s in seasons_list}
+    league_ids = list({s.league_id for s in seasons_list})
+    leagues = session.exec(
+        select(League).where(col(League.id).in_(league_ids))
+    ).all()
+    league_map = {lg.id: lg for lg in leagues}
+    result: dict[uuid.UUID, list[ClubSeasonHistory]] = {}
+    for lnk in links:
+        season = season_map.get(lnk.season_id)
+        if not season:
+            continue
+        league = league_map.get(season.league_id)
+        entry = ClubSeasonHistory(
+            season_id=str(season.id),
+            season_name=season.name,
+            league_id=str(season.league_id),
+            league_name=league.name if league else "Unknown",
+            is_active=season.end_date is None,
+            start_date=season.start_date,
+            end_date=season.end_date,
+        )
+        result.setdefault(lnk.club_id, []).append(entry)
+    return result
+
+
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
         user_create, update={"hashed_password": get_password_hash(user_create.password)}
@@ -190,11 +234,29 @@ def get_clubs_by_season(
         .offset(skip)
         .limit(limit)
     ).all()
+    if not links:
+        return [], count
+    club_ids = [lnk.club_id for lnk in links]
+    clubs_list = session.exec(
+        select(Club).where(col(Club.id).in_(club_ids))
+    ).all()
+    club_map = {c.id: c for c in clubs_list}
+    history_map = _build_history_batch(session=session, club_ids=club_ids)
     result: list[ClubPublic] = []
-    for link in links:
-        club = session.get(Club, link.club_id)
+    for lnk in links:
+        club = club_map.get(lnk.club_id)
         if club:
-            result.append(build_club_public(session=session, club=club))
+            history = history_map.get(club.id, [])
+            result.append(ClubPublic(
+                id=club.id,
+                name=club.name,
+                ea_id=club.ea_id,
+                logo_url=club.logo_url,
+                created_at=club.created_at,
+                updated_at=club.updated_at,
+                season_count=len(history),
+                history=history,
+            ))
     return result, count
 
 
@@ -286,9 +348,23 @@ def get_all_clubs(
     clubs = session.exec(
         select(Club).order_by(col(Club.name)).offset(skip).limit(limit)
     ).all()
+    if not clubs:
+        return [], count
+    club_ids = [c.id for c in clubs]
+    history_map = _build_history_batch(session=session, club_ids=club_ids)
     result: list[ClubPublic] = []
     for club in clubs:
-        result.append(build_club_public(session=session, club=club))
+        history = history_map.get(club.id, [])
+        result.append(ClubPublic(
+            id=club.id,
+            name=club.name,
+            ea_id=club.ea_id,
+            logo_url=club.logo_url,
+            created_at=club.created_at,
+            updated_at=club.updated_at,
+            season_count=len(history),
+            history=history,
+        ))
     return result, count
 
 

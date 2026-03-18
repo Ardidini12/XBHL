@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { GlobalClubsService, type ClubUpdate } from "@/client"
+import { GlobalClubsService, type ClubPublic, type ClubsPublic, type ClubUpdate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -82,7 +82,19 @@ const EditClubGlobal = ({ club, open, onOpenChange }: EditClubGlobalProps) => {
   const mutation = useMutation({
     mutationFn: (data: ClubUpdate) =>
       GlobalClubsService.updateClub({ clubId: club.id, requestBody: data }),
-    onSuccess: () => {
+    onSuccess: (updatedClub: ClubPublic) => {
+      queryClient.setQueryData(
+        ["clubs-global"],
+        (old: ClubsPublic | undefined) => {
+          if (!old) return old
+          return {
+            ...old,
+            data: old.data.map((c) =>
+              c.id === updatedClub.id ? updatedClub : c
+            ),
+          }
+        },
+      )
       showSuccessToast("Club updated successfully")
       onOpenChange(false)
     },
